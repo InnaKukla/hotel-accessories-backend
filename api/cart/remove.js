@@ -1,8 +1,10 @@
 import connectDB from "../../../lib/mongodb";
 import User from "../../../models/User";
 import authMiddleware from "../../../middleware/auth-middleware";
+import { runMiddleware, cors } from "../../middleware/withCors";
 
 async function handler(req, res) {
+  await runMiddleware(req, res, cors);
   if (req.method !== "DELETE") return res.status(405).end();
   await connectDB();
 

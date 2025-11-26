@@ -3,6 +3,7 @@ import Product from "../../../models/Product";
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { runMiddleware, cors } from "../../middleware/withCors";
 
 // Налаштування Cloudinary
 cloudinary.config({
@@ -27,6 +28,7 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+   await runMiddleware(req, res, cors);
   await connectDB();
 
   if (req.method === "GET") {

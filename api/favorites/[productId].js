@@ -1,8 +1,10 @@
 import connectDB from "../../../lib/mongodb";
 import Favorite from "../../../models/Favorite";
 import authMiddleware from "../../../middleware/auth-middleware";
+import { runMiddleware, cors } from "../../middleware/withCors";
 
 async function handler(req, res) {
+  await runMiddleware(req, res, cors);
   await connectDB();
 
   const { productId } = req.query;

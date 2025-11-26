@@ -2,10 +2,12 @@ const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/auth-middleware");
 const User = require("../models/User");
+const { runMiddleware, cors } = require("../../middleware/withCors");
 
 // ✅ Додати товар до корзини
 
 router.post("/add", authMiddleware, async (req, res) => {
+    await runMiddleware(req, res, cors);
   try {
     const userId = req.user.userId;
 
@@ -38,6 +40,7 @@ router.post("/add", authMiddleware, async (req, res) => {
 // ✅ Оновити кількість товару в корзині
 
 router.put("/updateQuantity", authMiddleware, async (req, res) => {
+    await runMiddleware(req, res, cors);
   try {
     const userId = req.user.userId;
 
@@ -66,6 +69,7 @@ router.put("/updateQuantity", authMiddleware, async (req, res) => {
 
 // ✅ Отримати всі товари з корзини
 router.get("/", authMiddleware, async (req, res) => {
+    await runMiddleware(req, res, cors);
   try {
     const userId = req.user.userId;
 
@@ -82,6 +86,7 @@ router.get("/", authMiddleware, async (req, res) => {
 // ✅ Видалити товар з корзини
 
 router.delete("/remove/:productId", authMiddleware, async (req, res) => {
+    await runMiddleware(req, res, cors);
     try {
       const userId = req.user.userId;
   
@@ -104,7 +109,8 @@ router.delete("/remove/:productId", authMiddleware, async (req, res) => {
 
   // ✅ Щчистити корзину
 
-  router.delete("/clear", authMiddleware, async (req, res) => {
+router.delete("/clear", authMiddleware, async (req, res) => {
+      await runMiddleware(req, res, cors);
     try {
       const userId = req.user.userId;
      
