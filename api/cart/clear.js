@@ -1,12 +1,13 @@
-import connectDB from "../../../lib/mongodb";
-import User from "../../../models/User";
-import authMiddleware from "../../../middleware/auth-middleware";
+import authMiddleware from "../../middleware/auth-middleware";
 import { runMiddleware, cors } from "../../middleware/withCors";
+import User from "../../models/User";
+import connectDB from "../../lib/mongodb";
 
-async function handler(req, res) {
-    await runMiddleware(req, res, cors);
-  if (req.method !== "DELETE") return res.status(405).end();
+export default authMiddleware(async function handler(req, res) {
+  await runMiddleware(req, res, cors);
   await connectDB();
+
+  if (req.method !== "DELETE") return res.status(405).end();
 
   const userId = req.user.userId;
   const user = await User.findById(userId);
@@ -14,7 +15,6 @@ async function handler(req, res) {
 
   user.cart = [];
   await user.save();
-  res.status(200).json({ message: "Cart cleared", cart: user.cart });
-}
 
-export default authMiddleware(handler);
+  res.status(200).json({ message: "Cart cleared", cart: user.cart });
+});
