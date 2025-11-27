@@ -1,36 +1,32 @@
-import connectDB from "../../../lib/mongodb";
-import { runMiddleware, cors } from "../../../middleware/withCors";
 import Product from "../../../models/Product";
+import { runMiddleware, cors } from "../../../middleware/withCors";
+
 
 export default async function handler(req, res) {
   await runMiddleware(req, res, cors);
-  await connectDB();
+  if (req.method !== "GET") return res.status(405).end();
+
   const { category } = req.query;
+  let { page = 1, limit = 8 } = req.query;
+  page = parseInt(page);
+  limit = parseInt(limit);
 
-  if (!["bedding", "towels", "household-linens"].includes(category)) {
-    return res.status(400).json({ message: "Invalid category" });
-  }
-
-  if (req.method === "GET") {
-    let { page = 1, limit = 8 } = req.query;
-    page = parseInt(page);
-    limit = parseInt(limit);
+  try {
+    const validCategories = ["bedding", "towels", "household-linens"];
+    if (!validCategories.includes(category)) {
+      return res.status(400).json({ message: "Invalid category" });
+    }
 
     const totalProducts = await Product.countDocuments({ category });
-    const products = await Product.find({ category })
-      .skip((page - 1) * limit)
-      .limit(limit);
+    const products = await Product.find({ category }).skip((page - 1) * limit).limit(limit);
 
-    return res.status(200).json({
+    res.status(200).json({
       totalProducts,
       totalPages: Math.ceil(totalProducts / limit),
       currentPage: page,
       products,
     });
-  }
-
-  if (req.method === "DELETE") {
-    await Product.deleteMany({ category });
-    return res.status(200).json({ message: `${category} category deleted `});
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 }

@@ -2,13 +2,12 @@ import connectDB from "../../../lib/mongodb";
 import User from "../../../models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { runMiddleware,cors } from "../../middleware/withCors";
+import { runMiddleware, cors } from "../../middleware/withCors";
 
 export default async function handler(req, res) {
    await runMiddleware(req, res, cors);
-  if (req.method !== "POST") return res.status(405).end();
-
   await connectDB();
+  if (req.method !== "POST") return res.status(405).end();
 
   try {
     const { companyName, firstName, lastName, phone, email, password, confirmPassword } = req.body;
@@ -19,8 +18,8 @@ export default async function handler(req, res) {
     if (password !== confirmPassword) return res.status(400).json({ message: "Passwords do not match" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const user = new User({ companyName, firstName, lastName, phone, email, password: hashedPassword });
+
     await user.save();
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });

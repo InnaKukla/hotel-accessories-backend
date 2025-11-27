@@ -1,6 +1,6 @@
 import connectDB from "../../../lib/mongodb";
-import Contact from "../../../models/Contact";
 import { runMiddleware, cors } from "../../middleware/withCors";
+import Contact from "../../models/Contact";
 
 export default async function handler(req, res) {
   await runMiddleware(req, res, cors);
@@ -22,8 +22,6 @@ export default async function handler(req, res) {
 
     res.status(201).json({ message: "Your request has been sent!" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error submitting form", error: error.message });
+    res.status(500).json({ message: "Error submitting form", error: error.message });
   }
 }

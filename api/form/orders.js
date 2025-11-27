@@ -1,25 +1,19 @@
-
-
 import connectDB from "../../../lib/mongodb";
 import Order from "../../../models/Order";
 import authMiddleware from "../../../middleware/auth-middleware";
 import { runMiddleware, cors } from "../../middleware/withCors";
 
-async function handler(req, res) {
-  await runMiddleware(req, res, cors);
+export default authMiddleware(async function handler(req, res) {
+    await runMiddleware(req, res, cors);
   await connectDB();
 
   if (req.method !== "GET") return res.status(405).end();
 
-  const userId = req.user?.userId;
-  if (!userId) return res.status(401).json({ message: "Unauthorized" });
-
   try {
-    const orders = await Order.find({ user: userId });
-    res.status(200).json({ orders, total: orders.length });
+    const orders = await Order.find({ user: req.user.userId });
+    const total = orders.length;
+    res.status(200).json({ orders, total });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching orders", error: error.message });
+    res.status(500).json({ message: "Error retrieving orders", error: error.message });
   }
-}
-
-export default authMiddleware(handler);
+});

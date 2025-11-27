@@ -1,48 +1,59 @@
 import connectDB from "../../../lib/mongodb";
-import Favorite from "../../../models/Favorite";
 import authMiddleware from "../../../middleware/auth-middleware";
 import { runMiddleware, cors } from "../../middleware/withCors";
+import Favorite from "../../models/Favorite";
 
-async function handler(req, res) {
-  await runMiddleware(req, res, cors);
+export default async function handler(req, res) {
+   await runMiddleware(req, res, cors);
   await connectDB();
 
-  const method = req.method;
-  const userId = req.user?.userId;
+  if (req.method === "GET") {
+    await authMiddleware(req, res);
 
-  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    const { userId } = req.user;
 
-  // ✅ GET all favorites
-  if (method === "GET") {
     try {
       const favorites = await Favorite.find({ userId }).populate("productId");
-      res.status(200).json(favorites.map(fav => fav.productId));
+
+      return res.json(favorites.map((fav) => fav.productId));
     } catch (error) {
-      res.status(500).json({ message: "Error retrieving favorites", error: error.message });
+      return res.status(500).json({
+        message: "Error retrieving favorites",
+        error: error.message,
+      });
     }
-    return;
   }
 
-  // ✅ POST add favorite
-  if (method === "POST") {
+  if (req.method === "POST") {
     try {
-      const { productId } = req.body;
-      if (!productId) return res.status(400).json({ message: "productId is required" });
+      const { productId, userId } = req.body;
 
-      const existing = await Favorite.findOne({ userId, productId });
-      if (existing) return res.status(400).json({ message: "Product already in favorites" });
+      if (!userId || !productId) {
+        return res.status(400).json({
+          message: "userId and productId are required",
+        });
+      }
+
+      const existingFavorite = await Favorite.findOne({ userId, productId });
+
+      if (existingFavorite) {
+        return res
+          .status(400)
+          .json({ message: "Product is already in favorites" });
+      }
 
       const favorite = new Favorite({ userId, productId });
       await favorite.save();
 
-      res.status(201).json({ message: "Product added to favorites", favorite });
+      return res
+        .status(201)
+        .json({ message: "Product add to favorites", favorite });
     } catch (error) {
-      res.status(500).json({ message: "Error adding to favorites", error: error.message });
+      return res
+        .status(500)
+        .json({ message: "Error adding to favorites", error: error.message });
     }
-    return;
   }
 
-  res.status(405).end();
+  return res.status(405).json({ message: "Method not allowed" });
 }
-
-export default authMiddleware(handler);

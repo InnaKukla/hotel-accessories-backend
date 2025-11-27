@@ -6,8 +6,8 @@ import { runMiddleware, cors } from "../../middleware/withCors";
 
 export default async function handler(req, res) {
   await runMiddleware(req, res, cors);
-  if (req.method !== "POST") return res.status(405).end();
   await connectDB();
+  if (req.method !== "POST") return res.status(405).end();
 
   try {
     const { email, password } = req.body;
