@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
@@ -28,7 +28,7 @@ const productSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["bedding", "towels", "household-linens"], // Обмежуємо категорії
+      enum: ["bedding", "towels", "household-linens"],
       required: true,
     },
     image: {
@@ -40,10 +40,10 @@ const productSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // Додає createdAt та updatedAt
+    timestamps: true,
   }
 );
 
-const Product = mongoose.model("Product", productSchema);
+const Product = mongoose.models.Product || mongoose.model("Product", productSchema);
 
-module.exports = Product;
+export default Product;

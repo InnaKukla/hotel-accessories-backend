@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const UserSchema = new mongoose.Schema(
   {
@@ -9,18 +9,19 @@ const UserSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     token: { type: String, default: null },
-    cart: [{
-      product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
-      quantity: { type: Number, default: 1 }
-    }],
-    default: []
-  
+    cart: [
+      {
+        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+        quantity: { type: Number, default: 1 },
+      },
+    ],
   },
   {
-    timestamps: true, // Додає createdAt і updatedAt
+    timestamps: true,
   }
 );
 
-const User = mongoose.model("User", UserSchema);
+// Уникаємо помилок при повторному імпорті у Next.js
+const User = mongoose.models.User || mongoose.model("User", UserSchema);
 
-module.exports = User;
+export default User;
