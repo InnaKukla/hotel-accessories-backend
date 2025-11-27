@@ -2,7 +2,7 @@ import connectDB from "../../../lib/mongodb";
 import User from "../../../models/User";
 import authMiddleware from "../../../middleware/auth-middleware";
 
-export default authMiddleware(async function handler(req, res) {
+async function handler(req, res) {
   await connectDB();
   if (req.method !== "POST") return res.status(405).end();
 
@@ -16,4 +16,5 @@ export default authMiddleware(async function handler(req, res) {
   } catch (error) {
     res.status(500).json({ message: "Error fetching user", error: error.message });
   }
-});
+};
+export default authMiddleware(handler);

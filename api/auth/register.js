@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { runMiddleware, cors } from "../../middleware/withCors";
 
-export default async function handler(req, res) {
+async function handler(req, res) {
    await runMiddleware(req, res, cors);
   await connectDB();
   if (req.method !== "POST") return res.status(405).end();
@@ -40,3 +40,4 @@ export default async function handler(req, res) {
     res.status(500).json({ message: "Error registering user", error: error.message });
   }
 }
+export default authMiddleware(handler);

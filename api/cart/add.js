@@ -3,12 +3,11 @@ import authMiddleware from "../../../middleware/auth-middleware";
 import { runMiddleware, cors } from "../../middleware/withCors";
 import User from "../../models/User";
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   await runMiddleware(req, res, cors);
   if (req.method !== "POST") return res.status(405).end();
 
   await connectDB();
-  await authMiddleware(req, res);
 
   try {
     const userId = req.user.userId;
@@ -35,3 +34,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ message: "Error adding to cart" });
   }
 }
+export default authMiddleware(handler);

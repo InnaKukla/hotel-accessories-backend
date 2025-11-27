@@ -4,10 +4,11 @@ import bcrypt from "bcryptjs";
 import authMiddleware from "../../../middleware/auth-middleware";
 import { runMiddleware, cors } from "../../middleware/withCors";
 
-export default authMiddleware(async function handler(req, res) {
+async function handler(req, res) {
    await runMiddleware(req, res, cors);
-  await connectDB();
+  
   if (req.method !== "PUT") return res.status(405).end();
+  await connectDB();
 
   try {
     const { companyName, firstName, lastName, phone, password } = req.body;
@@ -29,4 +30,6 @@ export default authMiddleware(async function handler(req, res) {
   } catch (error) {
     res.status(500).json({ message: "Error updating user", error: error.message });
   }
-});
+};
+
+export default authMiddleware(handler);

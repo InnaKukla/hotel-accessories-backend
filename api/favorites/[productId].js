@@ -3,12 +3,11 @@ import Favorite from "../../../models/Favorite";
 import authMiddleware from "../../../middleware/auth-middleware";
 import { runMiddleware, cors } from "../../middleware/withCors";
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   await runMiddleware(req, res, cors);
   if (req.method !== "GET") return res.status(405).end();
 
   await connectDB();
-  await authMiddleware(req, res);
 
   const { productId } = req.query;
   const { userId } = req.user;
@@ -33,3 +32,4 @@ export default async function handler(req, res) {
     });
   }
 }
+export default authMiddleware(handler);
