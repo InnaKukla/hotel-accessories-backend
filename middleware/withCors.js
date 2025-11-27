@@ -1,7 +1,7 @@
 import Cors from "cors";
 
 // Ініціалізуємо cors
-const cors = Cors({
+export const cors = Cors({
   origin: ["https://hotel-accessories.netlify.app", "http://localhost:3000"], // твої фронтенд-домени
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
