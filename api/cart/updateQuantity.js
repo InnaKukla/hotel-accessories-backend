@@ -1,25 +1,40 @@
-import authMiddleware from "../../middleware/auth-middleware";
-import { runMiddleware, cors } from "../../middleware/withCors";
+import connectDB from "../../../lib/mongodb";
+import authMiddleware from "../../../middleware/auth-middleware";
 import User from "../../models/User";
-import connectDB from "../../lib/mongodb";
+import { runMiddleware, cors } from "../../middleware/withCors";
 
-export default authMiddleware(async function handler(req, res) {
+
+export default async function handler(req, res) {
   await runMiddleware(req, res, cors);
-  await connectDB();
-
   if (req.method !== "PUT") return res.status(405).end();
 
-  const { productId, quantity } = req.body;
-  if (!productId || quantity < 1)
-    return res.status(400).json({ message: "Invalid productId or quantity" });
+  await connectDB();
+  await authMiddleware(req, res);
 
-  const userId = req.user.userId;
-  const user = await User.findById(userId);
-  const cartItem = user.cart.find((item) => item.product.toString() === productId);
-  if (!cartItem) return res.status(404).json({ message: "Product not found in cart" });
+  try {
+    const userId = req.user.userId;
+    const { productId, quantity } = req.body;
 
-  cartItem.quantity = quantity;
-  await user.save();
+    if (!productId || quantity < 1) {
+      return res.status(404).json({ message: "Invalid productId or quantity" });
+    }
 
-  res.status(200).json({ message: "Cart updated", cart: user.cart });
-});
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const cartItem = user.cart.find(
+      (item) => item.product.toString() === productId
+    );
+
+    if (!cartItem)
+      return res.status(404).json({ message: "Product not found in cart" });
+
+    cartItem.quantity = quantity;
+
+    await user.save();
+
+    return res.status(200).json({ message: "Cart updated", cart: user.cart });
+  } catch {
+    return res.status(500).json({ message: "Error updating to cart" });
+  }
+}
