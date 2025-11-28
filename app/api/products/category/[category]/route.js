@@ -7,7 +7,7 @@ await connectDB();
 
 export async function GET(req, { params }) {
   await runMiddleware(req, null, cors);
-
+    await connectDB();
   try {
     const { category } = params;
     const { searchParams } = new URL(req.url);
@@ -49,6 +49,7 @@ export async function GET(req, { params }) {
 export async function DELETE(req, { params }) {
   await runMiddleware(req, null, cors);
   await authMiddleware(req, null);
+      await connectDB();
 
   try {
     const { category } = params;
