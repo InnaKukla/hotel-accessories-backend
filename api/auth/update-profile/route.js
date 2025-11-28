@@ -1,21 +1,37 @@
 import bcrypt from "bcryptjs";
-import connectDB from "../../../lib/mongodb";
-import { runMiddleware, cors } from "../../../middleware/cors";
-import User from "../../../modules/User";
-import authMiddleware from "../../../middleware/auth";
+import connectDB from "../../../lib/mongodb.js";
+import corsMiddleware from "../../../middleware/cors.js";
+import authMiddleware from "../../../middleware/auth.js";
+import User from "../../../modules/User.js";
 
-export async function PUT(req) {
-  await runMiddleware(req, null, cors);
+export default async function handler(req, res) {
+  await corsMiddleware(req, res);
+
+  if (req.method !== "PUT") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
   await connectDB();
-  await authMiddleware(req, null);
+
+  // auth middleware → розшифровує токен і кладе userId в req.user
+  const authError = await authMiddleware(req, res);
+  if (authError) return; // якщо там вже відправлено res — просто стоп
 
   try {
-    const body = await req.json();
-    const { companyName, firstName, lastName, phone, password } = body;
-    const userId = req.user.userId;
+    const {
+      companyName,
+      firstName,
+      lastName,
+      phone,
+      password
+    } = req.body;
 
+    const userId = req.user.userId;
     const user = await User.findById(userId);
-    if (!user) return new Response(JSON.stringify({ message: "User not found" }), { status: 404 });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     if (companyName) user.companyName = companyName;
     if (firstName) user.firstName = firstName;
@@ -24,8 +40,16 @@ export async function PUT(req) {
     if (password) user.password = await bcrypt.hash(password, 10);
 
     await user.save();
-    return new Response(JSON.stringify({ message: "User updated successfully", user }), { status: 200 });
+
+    return res.status(200).json({
+      message: "User updated successfully",
+      user
+    });
+
   } catch (error) {
-    return new Response(JSON.stringify({ message: "Error updating profile", error: error.message }), { status: 500 });
+    return res.status(500).json({
+      message: "Error updating profile",
+      error: error.message
+    });
   }
 }

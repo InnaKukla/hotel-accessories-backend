@@ -1,41 +1,42 @@
-import connectDB from "../../../lib/mongodb";
-import authMiddleware from "../../../middleware/auth";
-import { runMiddleware, cors } from "../../../middleware/cors";
-import Favorite from "../../../modules/Favorite";
+import connectDB from "../../../lib/mongodb.js";
+import corsMiddleware from "../../../middleware/cors.js";
+import authMiddleware from "../../../middleware/auth.js";
+import Favorite from "../../../modules/Favorite.js";
 
+export default async function handler(req, res) {
+  await corsMiddleware(req, res);
 
-export async function GET(req, { params }) {
-  await runMiddleware(req, null, cors);
+  const { productId } = req.query; // [productId].js → Vercel передає як query
+  if (!productId) return res.status(400).json({ message: "Product ID is required" });
+
   await connectDB();
-  await authMiddleware(req, null);
+
+  // auth middleware → розшифровує токен і кладе userId в req.user
+  const authError = await authMiddleware(req, res);
+  if (authError) return; // якщо middleware вже відправив res
 
   try {
-    const { productId } = params;
     const { userId } = req.user;
 
-    const favorite = await Favorite.findOne({ userId, productId }).populate("productId");
-    if (!favorite) return new Response(JSON.stringify({ isFavorite: false, product: null }), { status: 200 });
+    if (req.method === "GET") {
+      const favorite = await Favorite.findOne({ userId, productId }).populate("productId");
+      if (!favorite) {
+        return res.status(200).json({ isFavorite: false, product: null });
+      }
+      return res.status(200).json({ isFavorite: true, product: favorite.productId });
 
-    return new Response(JSON.stringify({ isFavorite: true, product: favorite.productId }), { status: 200 });
+    } else if (req.method === "DELETE") {
+      const favorite = await Favorite.findOneAndDelete({ userId, productId });
+      if (!favorite) {
+        return res.status(404).json({ message: "Product not found in favorites" });
+      }
+      return res.status(200).json({ message: "Product removed from favorites" });
+
+    } else {
+      return res.status(405).json({ message: "Method not allowed" });
+    }
+
   } catch (error) {
-    return new Response(JSON.stringify({ message: "Error fetching product", error: error.message }), { status: 500 });
-  }
-}
-
-export async function DELETE(req, { params }) {
-  await runMiddleware(req, null, cors);
-  await connectDB();
-  await authMiddleware(req, null);
-
-  try {
-    const { productId } = params;
-    const { userId } = req.user;
-
-    const favorite = await Favorite.findOneAndDelete({ userId, productId });
-    if (!favorite) return new Response(JSON.stringify({ message: "Product not found in favorites" }), { status: 404 });
-
-    return new Response(JSON.stringify({ message: "Product removed from favorites" }), { status: 200 });
-  } catch (error) {
-    return new Response(JSON.stringify({ message: "Error deleting favorite", error: error.message }), { status: 500 });
+    return res.status(500).json({ message: "Error handling favorite", error: error.message });
   }
 }

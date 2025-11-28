@@ -1,10 +1,10 @@
-import connectDB from "../../../lib/mongodb";
-import authMiddleware from "../../../middleware/auth";
-import { runMiddleware, cors } from "../../../middleware/cors";
+import connectDB from "../../../lib/mongodb.js";
+import authMiddleware from "../../../middleware/auth.js";
+import corsMiddleware from "../../../middleware/cors.js";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "../../../lib/cloudinary";
-import Product from "../../../modules/Product";
+import cloudinary from "../../../lib/cloudinary.js";
+import Product from "../../../modules/Product.js";
 
 const storage = new CloudinaryStorage({
   cloudinary,
@@ -16,67 +16,62 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-export async function GET(req, { params }) {
-  await runMiddleware(req, null, cors);
+export default async function handler(req, res) {
+  await corsMiddleware(req, res);
   await connectDB();
+
+  const { id } = req.query;
 
   try {
-    const product = await Product.findById(params.id);
-    if (!product) return new Response(JSON.stringify({ message: "Product not found" }), { status: 404 });
-    return new Response(JSON.stringify(product), { status: 200 });
-  } catch (error) {
-    return new Response(JSON.stringify({ message: "Error fetching product", error: error.message }), { status: 500 });
-  }
-}
-
-export const PATCH = async (req, { params }) => {
-  await runMiddleware(req, null, cors);
-  await connectDB();
-  await authMiddleware(req, null);
-
-  return new Promise((resolve) => {
-    upload.single("image")(req, {}, async (err) => {
-      if (err) return resolve(new Response(JSON.stringify({ message: err.message }), { status: 500 }));
-
-      try {
-        const updates = req.body;
-        const product = await Product.findById(params.id);
-        if (!product) return resolve(new Response(JSON.stringify({ message: "Product not found" }), { status: 404 }));
-
-        // Якщо нове зображення, видаляємо старе
-        if (req.file && product.image) {
-          const publicId = product.image.split("/").pop().split(".")[0];
-          await cloudinary.uploader.destroy(`product_images/${publicId}`);
-          updates.image = req.file.path;
-        }
-
-        Object.assign(product, updates);
-        await product.save();
-        resolve(new Response(JSON.stringify(product), { status: 200 }));
-      } catch (error) {
-        resolve(new Response(JSON.stringify({ message: "Error updating product", error: error.message }), { status: 500 }));
-      }
-    });
-  });
-};
-
-export async function DELETE(req, { params }) {
-  await runMiddleware(req, null, cors);
-  await connectDB();
-  await authMiddleware(req, null);
-
-  try {
-    const product = await Product.findById(params.id);
-    if (!product) return new Response(JSON.stringify({ message: "Product not found" }), { status: 404 });
-
-    if (product.image) {
-      const publicId = product.image.split("/").pop().split(".")[0];
-      await cloudinary.uploader.destroy(`product_images/${publicId}`);
+    if (req.method === "GET") {
+      const product = await Product.findById(id);
+      if (!product) return res.status(404).json({ message: "Product not found" });
+      return res.status(200).json(product);
     }
 
-    await Product.findByIdAndDelete(params.id);
-    return new Response(JSON.stringify({ message: "Product and image deleted" }), { status: 200 });
+    if (req.method === "PATCH") {
+      await authMiddleware(req, res);
+
+      return upload.single("image")(req, res, async (err) => {
+        if (err) return res.status(500).json({ message: err.message });
+
+        try {
+          const updates = req.body;
+          const product = await Product.findById(id);
+          if (!product) return res.status(404).json({ message: "Product not found" });
+
+          if (req.file && product.image) {
+            const publicId = product.image.split("/").pop().split(".")[0];
+            await cloudinary.uploader.destroy(`product_images/${publicId}`);
+            updates.image = req.file.path;
+          }
+
+          Object.assign(product, updates);
+          await product.save();
+          return res.status(200).json(product);
+        } catch (error) {
+          return res.status(500).json({ message: "Error updating product", error: error.message });
+        }
+      });
+    }
+
+    if (req.method === "DELETE") {
+      await authMiddleware(req, res);
+
+      const product = await Product.findById(id);
+      if (!product) return res.status(404).json({ message: "Product not found" });
+
+      if (product.image) {
+        const publicId = product.image.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(`product_images/${publicId}`);
+      }
+
+      await Product.findByIdAndDelete(id);
+      return res.status(200).json({ message: "Product and image deleted" });
+    }
+
+    return res.status(405).json({ message: "Method not allowed" });
   } catch (error) {
-    return new Response(JSON.stringify({ message: "Error deleting product", error: error.message }), { status: 500 });
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 }

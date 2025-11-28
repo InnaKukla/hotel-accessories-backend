@@ -1,21 +1,37 @@
+import connectDB from "../../lib/mongodb.js";
+import authMiddleware from "../../middleware/auth.js";
+import User from "../../modules/User.js";
 
-import connectDB from "../../../lib/mongodb";
-import authMiddleware from "../../../middleware/auth";
-import { runMiddleware, cors } from "../../../middleware/cors";
-import User from "../../../modules/User";
-
-export async function POST(req) {
-  await runMiddleware(req, null, cors);
-  await connectDB();
-  await authMiddleware(req, null);
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
 
   try {
-    const userId = req.user.userId;
-    const user = await User.findByIdAndUpdate(userId, { token: null }, { new: true });
-    if (!user) return new Response(JSON.stringify({ message: "User not found" }), { status: 404 });
+    await connectDB();
 
-    return new Response(JSON.stringify({ message: "You logged out" }), { status: 200 });
+    // Run auth middleware
+    const userData = await authMiddleware(req, res);
+    if (!userData) return; // Middleware already sent error response
+
+    const userId = userData.userId;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { token: null },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ message: "You logged out" });
+
   } catch (error) {
-    return new Response(JSON.stringify({ message: "Error logging out", error: error.message }), { status: 500 });
+    return res.status(500).json({
+      message: "Error logging out",
+      error: error.message,
+    });
   }
 }

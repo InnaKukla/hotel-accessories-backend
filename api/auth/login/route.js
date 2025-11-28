@@ -1,26 +1,37 @@
-
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import connectDB from "../../../lib/mongodb";
-import { runMiddleware, cors } from "../../../middleware/cors";
-import User from "../../..//modules/User";
+import connectDB from "../../lib/mongodb.js";
+import User from "../../modules/User.js";
 
-export async function POST(req) {
-  await runMiddleware(req, null, cors);
-  await connectDB();
+export default async function handler(req, res) {
+  // Only POST allowed
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
 
   try {
-    const { email, password } = await req.json();
+    // connect DB
+    await connectDB();
+
+    const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return new Response(JSON.stringify({ message: "Invalid credentials" }), { status: 400 });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return new Response(JSON.stringify({ message: "Invalid credentials" }), { status: 400 });
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-    return new Response(JSON.stringify({
+    return res.status(200).json({
       token,
       user: {
         id: user._id,
@@ -30,9 +41,12 @@ export async function POST(req) {
         phone: user.phone,
         email: user.email
       }
-    }), { status: 200 });
+    });
 
   } catch (error) {
-    return new Response(JSON.stringify({ message: "Error logging in", error: error.message }), { status: 500 });
+    return res.status(500).json({
+      message: "Error logging in",
+      error: error.message
+    });
   }
 }

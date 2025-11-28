@@ -1,20 +1,35 @@
-import connectDB from "../../../lib/mongodb";
-import authMiddleware from "../../../middleware/auth";
-import { runMiddleware, cors } from "../../../middleware/cors";
-import User from "../../../modules/User";
+import connectDB from "../../../lib/mongodb.js";
+import corsMiddleware from "../../../middleware/cors.js";
+import authMiddleware from "../../../middleware/auth.js";
+import User from "../../../modules/User.js";
 
-export async function GET(req, { params }) {
-  await runMiddleware(req, null, cors);
+export default async function handler(req, res) {
+  await corsMiddleware(req, res);
+
+  if (req.method !== "GET") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
   await connectDB();
-  await authMiddleware(req, null);
+
+  // auth middleware → розшифровує токен і кладе userId в req.user
+  const authError = await authMiddleware(req, res);
+  if (authError) return; // якщо middleware вже відправив res
 
   try {
-    const { id } = params;
-    const user = await User.findById(id).select("-password");
-    if (!user) return new Response(JSON.stringify({ message: "User not found" }), { status: 404 });
+    const userId = req.query.id; // в Vercel id йде як query параметр
+    const user = await User.findById(userId).select("-password");
 
-    return new Response(JSON.stringify(user), { status: 200 });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json(user);
+
   } catch (error) {
-    return new Response(JSON.stringify({ message: "Error fetching user", error: error.message }), { status: 500 });
+    return res.status(500).json({
+      message: "Error fetching user",
+      error: error.message
+    });
   }
 }

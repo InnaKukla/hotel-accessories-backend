@@ -1,82 +1,56 @@
-import connectDB from "../../../lib/mongodb";
-import authMiddleware from "../../../middleware/auth";
-import { runMiddleware, cors } from "../../../middleware/cors";
-import Product from "../../../modules/Product";
+import connectDB from "../../../lib/mongodb.js";
+import authMiddleware from "../../../middleware/auth.js";
+import corsMiddleware from "../../../middleware/cors.js";
+import Product from "../../../modules/Product.js";
 
-export async function GET(req, { params }) {
-  await runMiddleware(req, null, cors);
+export default async function handler(req, res) {
+  await corsMiddleware(req, res);
   await connectDB();
+
+  const validCategories = ["bedding", "towels", "household-linens"];
+
   try {
-    const { category } = params;
-    const { searchParams } = new URL(req.url);
-    let page = parseInt(searchParams.get("page")) || 1;
-    let limit = parseInt(searchParams.get("limit")) || 8;
+    if (req.method === "GET") {
+      const { category } = req.query; // для Vercel params йдуть як query
+      if (!validCategories.includes(category)) {
+        return res.status(400).json({ message: "Invalid category" });
+      }
 
-    // Перевірка допустимих категорій
-    const validCategories = ["bedding", "towels", "household-linens"];
-    if (!validCategories.includes(category)) {
-      return new Response(JSON.stringify({ message: "Invalid category" }), {
-        status: 400,
-      });
-    }
+      const { searchParams } = new URL(req.url);
+      let page = parseInt(searchParams.get("page")) || 1;
+      let limit = parseInt(searchParams.get("limit")) || 8;
 
-    const totalProducts = await Product.countDocuments({ category });
-    const products = await Product.find({ category })
-      .skip((page - 1) * limit)
-      .limit(limit);
+      const totalProducts = await Product.countDocuments({ category });
+      const products = await Product.find({ category })
+        .skip((page - 1) * limit)
+        .limit(limit);
 
-    return new Response(
-      JSON.stringify({
+      return res.status(200).json({
         totalProducts,
         totalPages: Math.ceil(totalProducts / limit),
         currentPage: page,
         products,
-      }),
-      { status: 200 }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({
-        message: "Error fetching catalog",
-        error: error.message,
-      }),
-      { status: 500 }
-    );
-  }
-}
-
-// DELETE категорії (всі продукти цієї категорії)
-export async function DELETE(req, { params }) {
-  await runMiddleware(req, null, cors);
-  await authMiddleware(req, null);
-  await connectDB();
-
-  try {
-    const { category } = params;
-    const validCategories = ["bedding", "towels", "household-linens"];
-    if (!validCategories.includes(category)) {
-      return new Response(JSON.stringify({ message: "Invalid category" }), {
-        status: 400,
       });
     }
 
-    // Видаляємо всі продукти цієї категорії
-    const result = await Product.deleteMany({ category });
+    if (req.method === "DELETE") {
+      await authMiddleware(req, res);
 
-    return new Response(
-      JSON.stringify({
+      const { category } = req.query;
+      if (!validCategories.includes(category)) {
+        return res.status(400).json({ message: "Invalid category" });
+      }
+
+      const result = await Product.deleteMany({ category });
+
+      return res.status(200).json({
         message: `${category} category deleted`,
         deletedCount: result.deletedCount,
-      }),
-      { status: 200 }
-    );
+      });
+    }
+
+    return res.status(405).json({ message: "Method not allowed" });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        message: "Error deleting category",
-        error: error.message,
-      }),
-      { status: 500 }
-    );
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 }

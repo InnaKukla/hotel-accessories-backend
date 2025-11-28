@@ -1,10 +1,10 @@
-import connectDB from "../../../lib/mongodb";
+import connectDB from "../../../lib/mongodb.js";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "../../../lib/cloudinary";
-import authMiddleware from "../../../middleware/auth";
-import { runMiddleware, cors } from "../../../middleware/cors";
-import Product from "../../../modules/Product";
+import cloudinary from "../../../lib/cloudinary.js";
+import authMiddleware from "../../../middleware/auth.js";
+import corsMiddleware from "../../../middleware/cors.js";
+import Product from "../../../modules/Product.js";
 
 const storage = new CloudinaryStorage({
   cloudinary,
@@ -16,55 +16,51 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-export async function GET(req) {
-  await runMiddleware(req, null, cors);
+export default async function handler(req, res) {
+  await corsMiddleware(req, res);
   await connectDB();
 
   try {
-    const { searchParams } = new URL(req.url);
-    let page = parseInt(searchParams.get("page")) || 1;
-    let limit = parseInt(searchParams.get("limit")) || 8;
+    if (req.method === "GET") {
+      const { searchParams } = new URL(req.url);
+      let page = parseInt(searchParams.get("page")) || 1;
+      let limit = parseInt(searchParams.get("limit")) || 8;
 
-    const totalProducts = await Product.countDocuments();
-    const products = await Product.find()
-      .skip((page - 1) * limit)
-      .limit(limit);
+      const totalProducts = await Product.countDocuments();
+      const products = await Product.find()
+        .skip((page - 1) * limit)
+        .limit(limit);
 
-    return new Response(
-      JSON.stringify({
+      return res.status(200).json({
         totalProducts,
         totalPages: Math.ceil(totalProducts / limit),
         currentPage: page,
         products,
-      }),
-      { status: 200 }
-    );
+      });
+    }
+
+    if (req.method === "POST") {
+      await authMiddleware(req, res);
+
+      return upload.single("image")(req, res, async (err) => {
+        if (err) return res.status(500).json({ message: err.message });
+
+        try {
+          const { code, name, description, price, size, color, category } = req.body;
+          const imageUrl = req.file ? req.file.path : "";
+
+          const product = new Product({ code, name, description, price, size, color, category, image: imageUrl });
+          await product.save();
+
+          return res.status(201).json(product);
+        } catch (error) {
+          return res.status(500).json({ message: "Error creating product", error: error.message });
+        }
+      });
+    }
+
+    return res.status(405).json({ message: "Method not allowed" });
   } catch (error) {
-    return new Response(JSON.stringify({ message: "Error fetching products", error: error.message }), { status: 500 });
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 }
-
-// Для POST треба обгорнути multer і authMiddleware
-export const POST = async (req, res) => {
-  await runMiddleware(req, null, cors);
-  await connectDB();
-  await authMiddleware(req, null);
-
-  return new Promise((resolve) => {
-    upload.single("image")(req, {}, async (err) => {
-      if (err) return resolve(new Response(JSON.stringify({ message: err.message }), { status: 500 }));
-
-      try {
-        const { code, name, description, price, size, color, category } = req.body;
-        const imageUrl = req.file ? req.file.path : "";
-
-        const product = new Product({ code, name, description, price, size, color, category, image: imageUrl });
-        await product.save();
-
-        resolve(new Response(JSON.stringify(product), { status: 201 }));
-      } catch (error) {
-        resolve(new Response(JSON.stringify({ message: "Error creating product", error: error.message }), { status: 500 }));
-      }
-    });
-  });
-};

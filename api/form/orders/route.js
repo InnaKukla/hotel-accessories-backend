@@ -1,22 +1,25 @@
-import connectDB from "../../../lib/mongodb";
-import authMiddleware from "../../../middleware/auth";
-import { runMiddleware, cors } from "../../../middleware/cors";
-import Order from "../../../modules/Order";
+import connectDB from "../../../lib/mongodb.js";
+import authMiddleware from "../../../middleware/auth.js";
+import corsMiddleware from "../../../middleware/cors.js";
+import Order from "../../../modules/Order.js";
 
-export async function GET(req) {
-      await runMiddleware(req, null, cors);
+export default async function handler(req, res) {
+  await corsMiddleware(req, res);
+  await connectDB();
+
+  if (req.method !== "GET") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
   try {
-    await connectDB();
+    // Авторизація
+    await authMiddleware(req, res);
 
-    const nextReq = { headers: Object.fromEntries(req.headers), user: null };
-    const nextRes = {};
-    await new Promise(resolve => authMiddleware(nextReq, nextRes, resolve));
-
-    const orders = await Order.find({ user: nextReq.user.userId });
+    const orders = await Order.find({ user: req.user.userId });
     const total = orders.length;
 
-    return Response.json({ orders, total }, { status: 200 });
+    return res.status(200).json({ orders, total });
   } catch (error) {
-    return Response.json({ message: "Error fetching orders", error: error.message }, { status: 500 });
+    return res.status(500).json({ message: "Error fetching orders", error: error.message });
   }
 }

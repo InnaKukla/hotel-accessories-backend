@@ -1,23 +1,28 @@
-import connectDB from "../../../lib/mongodb";
-import { runMiddleware, cors } from "../../../middleware/cors";
-import Contact from "../../../modules/Contact";
+import connectDB from "../../../lib/mongodb.js";
+import corsMiddleware from "../../../middleware/cors.js";
+import Contact from "../../../modules/Contact.js";
 
-export async function POST(req) {
-  await runMiddleware(req, null, cors);
+export default async function handler(req, res) {
+  await corsMiddleware(req, res);
   await connectDB();
 
   try {
-    const { companyName, email, phone, message } = await req.json();
+    if (req.method === "POST") {
+      const { companyName, email, phone, message } = req.body;
 
-    if (!email || !phone) {
-      return new Response(JSON.stringify({ message: "Please fill in the required fields." }), { status: 400 });
+      if (!email || !phone) {
+        return res.status(400).json({ message: "Please fill in the required fields." });
+      }
+
+      const contact = new Contact({ companyName, email, phone, message });
+      await contact.save();
+
+      return res.status(201).json({ message: "Your request has been sent!" });
+
+    } else {
+      return res.status(405).json({ message: "Method not allowed" });
     }
-
-    const contact = new Contact({ companyName, email, phone, message });
-    await contact.save();
-
-    return new Response(JSON.stringify({ message: "Your request has been sent!" }), { status: 201 });
   } catch (error) {
-    return new Response(JSON.stringify({ message: "Error submitting form", error: error.message }), { status: 500 });
+    return res.status(500).json({ message: "Error submitting form", error: error.message });
   }
 }

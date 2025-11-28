@@ -1,46 +1,39 @@
-import connectDB from "../../../lib/mongodb";
-import authMiddleware from "../../../middleware/auth";
-import { runMiddleware, cors } from "../../../middleware/cors";
-import Favorite from "../../../modules/Favorite";
+import connectDB from "../../../lib/mongodb.js";
+import corsMiddleware from "../../../middleware/cors.js";
+import authMiddleware from "../../../middleware/auth.js";
+import Favorite from "../../../modules/Favorite.js";
 
-export async function GET(req) {
-  await runMiddleware(req, null, cors);
+export default async function handler(req, res) {
+  await corsMiddleware(req, res);
   await connectDB();
-  await authMiddleware(req, null);
+
+  const authError = await authMiddleware(req, res);
+  if (authError) return; // якщо middleware вже відправив відповідь
+
+  const { userId } = req.user;
 
   try {
-    const { userId } = req.user;
-    const favorites = await Favorite.find({ userId }).populate("productId");
+    if (req.method === "GET") {
+      const favorites = await Favorite.find({ userId }).populate("productId");
+      return res.status(200).json(favorites.map(fav => fav.productId));
 
-    return new Response(JSON.stringify(favorites.map(fav => fav.productId)), { status: 200 });
-  } catch (error) {
-    return new Response(JSON.stringify({ message: "Error retrieving favorites", error: error.message }), { status: 500 });
-  }
-}
+    } else if (req.method === "POST") {
+      const { productId } = req.body; // Vercel автоматично парсить JSON через Express-like API
+      if (!productId) return res.status(400).json({ message: "productId is required" });
 
-export async function POST(req) {
-  await runMiddleware(req, null, cors);
-  await connectDB();
-  await authMiddleware(req, null);
+      const existingFavorite = await Favorite.findOne({ userId, productId });
+      if (existingFavorite) {
+        return res.status(400).json({ message: "Product is already in favorites" });
+      }
 
-  try {
-    const { productId } = await req.json();
-    const { userId } = req.user;
+      const favorite = new Favorite({ userId, productId });
+      await favorite.save();
+      return res.status(201).json({ message: "Product added to favorites", favorite });
 
-    if (!productId) {
-      return new Response(JSON.stringify({ message: "productId is required" }), { status: 400 });
+    } else {
+      return res.status(405).json({ message: "Method not allowed" });
     }
-
-    const existingFavorite = await Favorite.findOne({ userId, productId });
-    if (existingFavorite) {
-      return new Response(JSON.stringify({ message: "Product is already in favorites" }), { status: 400 });
-    }
-
-    const favorite = new Favorite({ userId, productId });
-    await favorite.save();
-
-    return new Response(JSON.stringify({ message: "Product added to favorites", favorite }), { status: 201 });
   } catch (error) {
-    return new Response(JSON.stringify({ message: "Error adding to favorites", error: error.message }), { status: 500 });
+    return res.status(500).json({ message: "Error handling favorites", error: error.message });
   }
 }
