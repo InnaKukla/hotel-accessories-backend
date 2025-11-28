@@ -1,7 +1,7 @@
 import connectDB from "@/app/lib/mongodb";
-import Product from "@/app/models/Product";
-import { runMiddleware, cors } from "@/app/middleware/withCors";
 import authMiddleware from "@/app/middleware/auth";
+import { runMiddleware, cors } from "@/app/middleware/cors";
+import Product from "@/app/modules/Product";
 
 await connectDB();
 

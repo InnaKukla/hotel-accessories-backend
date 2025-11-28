@@ -1,6 +1,5 @@
 import connectDB from "@/app/lib/mongodb";
-import authMiddleware from "@/app/middleware/auth";
-import Product from "@/app/models/Product";
+import Product from "@/app/modules/Product";
 
 export async function GET(req) {
   try {
