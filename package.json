@@ -1,11 +1,8 @@
 {
-  "name": "backend-new",
-  "version": "0.1.0",
+  "name": "backend",
+  "version": "1.0.0",
   "private": true,
-  "type": "module",
-  "scripts": {
-  "dev": "vercel dev"
-},
+  "scripts": {},
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cloudinary": "^1.41.3",
@@ -14,8 +11,5 @@
     "mongoose": "^8.20.1",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0"
-  },
-  "devDependencies": {
-    "eslint": "^9"
   }
 }
