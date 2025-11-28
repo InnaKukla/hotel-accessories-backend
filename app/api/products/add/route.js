@@ -1,10 +1,10 @@
 import connectDB from "@/app/lib/mongodb";
 import Product from "@/app/models/Product";
-import { runMiddleware, cors } from "@/app/middleware/withCors";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "@/app/lib/cloudinary";
 import authMiddleware from "@/app/middleware/auth";
+import { runMiddleware, cors } from "@/app/middleware/cors";
 
 const storage = new CloudinaryStorage({
   cloudinary,
