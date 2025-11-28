@@ -2,10 +2,11 @@
   "name": "backend-new",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "vercel dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node app/api/index.js",
     "lint": "eslint"
   },
   "dependencies": {
@@ -15,13 +16,9 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.20.1",
     "multer": "^2.0.2",
-    "multer-storage-cloudinary": "^4.0.0",
-    "next": "16.0.5",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "multer-storage-cloudinary": "^4.0.0"
   },
   "devDependencies": {
-    "eslint": "^9",
-    "eslint-config-next": "16.0.5"
+    "eslint": "^9"
   }
 }
