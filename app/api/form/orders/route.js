@@ -1,8 +1,10 @@
-import connectDB from "@/lib/mongodb";
-import Order from "@/models/Order";
-import authMiddleware from "@/middleware/auth-middleware";
+import connectDB from "@/app/lib/mongodb";
+import authMiddleware from "@/app/middleware/auth";
+import { runMiddleware, cors } from "@/app/middleware/cors";
+import Order from "@/app/modules/Order";
 
 export async function GET(req) {
+      await runMiddleware(req, null, cors);
   try {
     await connectDB();
 

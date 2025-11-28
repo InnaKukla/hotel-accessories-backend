@@ -1,7 +1,7 @@
-import connectDB from "@/lib/mongodb";
-import Favorite from "@/models/Favorite";
-import authMiddleware from "@/middleware/auth-middleware";
-import { runMiddleware, cors } from "@/middleware/withCors";
+import connectDB from "@/app/lib/mongodb";
+import authMiddleware from "@/app/middleware/auth";
+import { runMiddleware, cors } from "@/app/middleware/cors";
+import Favorite from "@/app/modules/Favorite";
 
 export async function GET(req) {
   await runMiddleware(req, null, cors);

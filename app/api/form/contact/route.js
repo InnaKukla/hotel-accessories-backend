@@ -1,6 +1,6 @@
-import connectDB from "@/lib/mongodb";
-import Contact from "@/models/Contact";
-import { runMiddleware, cors } from "@/middleware/withCors";
+import connectDB from "@/app/lib/mongodb";
+import { runMiddleware, cors } from "@/app/middleware/cors";
+import Contact from "@/app/modules/Contact";
 
 export async function POST(req) {
   await runMiddleware(req, null, cors);

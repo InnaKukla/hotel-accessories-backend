@@ -1,8 +1,8 @@
-import connectDB from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
-import User from "@/models/User";
-import authMiddleware from "@/middleware/auth-middleware";
-import { runMiddleware, cors } from "@/middleware/withCors";
+import connectDB from "@/app/lib/mongodb";
+import { runMiddleware, cors } from "@/app/middleware/cors";
+import User from "@/app/modules/User";
+import authMiddleware from "@/app/middleware/auth";
 
 export async function PUT(req) {
   await runMiddleware(req, null, cors);

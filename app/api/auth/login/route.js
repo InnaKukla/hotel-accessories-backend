@@ -1,8 +1,9 @@
-import connectDB from "@/lib/mongodb";
+
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import User from "@/models/User";
-import { runMiddleware, cors } from "@/middleware/withCors";
+import connectDB from "@/app/lib/mongodb";
+import { runMiddleware, cors } from "@/app/middleware/cors";
+import User from "@/app/modules/User";
 
 export async function POST(req) {
   await runMiddleware(req, null, cors);
