@@ -4,11 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vercel dev",
-    "build": "next build",
-    "start": "node app/api/index.js",
-    "lint": "eslint"
-  },
+  "dev": "vercel dev",
+  "start": "vercel dev"
+},
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cloudinary": "^1.41.3",
