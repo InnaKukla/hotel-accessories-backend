@@ -1,39 +1,79 @@
-import connectDB from "../../../lib/mongodb.js";
-import corsMiddleware from "../../../middleware/cors.js";
-import authMiddleware from "../../../middleware/auth.js";
-import Favorite from "../../../modules/Favorite.js";
+import connectDB from "../../../lib/mongodb";
+import authMiddleware from "../../../middleware/auth";
+import { runMiddleware, cors } from "../../../middleware/cors";
+import Favorite from "../../../modules/Favorite";
 
-export default async function handler(req, res) {
-  await corsMiddleware(req, res);
+export async function GET(req) {
+  await runMiddleware(req, null, cors);
   await connectDB();
-
-  const authError = await authMiddleware(req, res);
-  if (authError) return; // якщо middleware вже відправив відповідь
-
-  const { userId } = req.user;
+  await authMiddleware(req, null);
 
   try {
-    if (req.method === "GET") {
-      const favorites = await Favorite.find({ userId }).populate("productId");
-      return res.status(200).json(favorites.map(fav => fav.productId));
+    const { searchParams } = new URL(req.url);
+    const productId = searchParams.get("productId");
+    const { userId } = req.user;
 
-    } else if (req.method === "POST") {
-      const { productId } = req.body; // Vercel автоматично парсить JSON через Express-like API
-      if (!productId) return res.status(400).json({ message: "productId is required" });
-
-      const existingFavorite = await Favorite.findOne({ userId, productId });
-      if (existingFavorite) {
-        return res.status(400).json({ message: "Product is already in favorites" });
-      }
-
-      const favorite = new Favorite({ userId, productId });
-      await favorite.save();
-      return res.status(201).json({ message: "Product added to favorites", favorite });
-
+    if (productId) {
+      // Перевірка конкретного продукту
+      const favorite = await Favorite.findOne({ userId, productId }).populate("productId");
+      if (!favorite) return new Response(JSON.stringify({ isFavorite: false, product: null }), { status: 200 });
+      return new Response(JSON.stringify({ isFavorite: true, product: favorite.productId }), { status: 200 });
     } else {
-      return res.status(405).json({ message: "Method not allowed" });
+      // Повернути всі улюблені товари користувача
+      const favorites = await Favorite.find({ userId }).populate("productId");
+      return new Response(JSON.stringify(favorites.map(fav => fav.productId)), { status: 200 });
     }
   } catch (error) {
-    return res.status(500).json({ message: "Error handling favorites", error: error.message });
+    return new Response(JSON.stringify({ message: "Error retrieving favorites", error: error.message }), { status: 500 });
+  }
+}
+
+export async function POST(req) {
+  await runMiddleware(req, null, cors);
+  await connectDB();
+  await authMiddleware(req, null);
+
+  try {
+    const { productId } = await req.json();
+    const { userId } = req.user;
+
+    if (!productId) {
+      return new Response(JSON.stringify({ message: "productId is required" }), { status: 400 });
+    }
+
+    const existingFavorite = await Favorite.findOne({ userId, productId });
+    if (existingFavorite) {
+      return new Response(JSON.stringify({ message: "Product is already in favorites" }), { status: 400 });
+    }
+
+    const favorite = new Favorite({ userId, productId });
+    await favorite.save();
+
+    return new Response(JSON.stringify({ message: "Product added to favorites", favorite }), { status: 201 });
+  } catch (error) {
+    return new Response(JSON.stringify({ message: "Error adding to favorites", error: error.message }), { status: 500 });
+  }
+}
+
+export async function DELETE(req) {
+  await runMiddleware(req, null, cors);
+  await connectDB();
+  await authMiddleware(req, null);
+
+  try {
+    const { searchParams } = new URL(req.url);
+    const productId = searchParams.get("productId");
+    const { userId } = req.user;
+
+    if (!productId) {
+      return new Response(JSON.stringify({ message: "productId is required" }), { status: 400 });
+    }
+
+    const favorite = await Favorite.findOneAndDelete({ userId, productId });
+    if (!favorite) return new Response(JSON.stringify({ message: "Product not found in favorites" }), { status: 404 });
+
+    return new Response(JSON.stringify({ message: "Product removed from favorites" }), { status: 200 });
+  } catch (error) {
+    return new Response(JSON.stringify({ message: "Error deleting favorite", error: error.message }), { status: 500 });
   }
 }
