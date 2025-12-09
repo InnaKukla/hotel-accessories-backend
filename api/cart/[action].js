@@ -1,118 +1,80 @@
-import connectDB from "../../../lib/mongodb";
-import authMiddleware from "../../../middleware/auth";
-import { runMiddleware, cors } from "../../../middleware/cors";
-import User from "../../../modules/User";
+import connectDB from "../../lib/mongodb.js";
+import User from "../../modules/User.js";
+import jwt from "jsonwebtoken";
 
-// ---------------- Add item to cart ----------------
-export async function POST(req) {
-  await runMiddleware(req, null, cors);
+export default async function handler(req, res) {
   await connectDB();
-  await authMiddleware(req, null);
 
+  const { action } = req.query; // <- ключова магія
+
+  // CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") return res.status(200).end();
+
+  // AUTH
   try {
-    const userId = req.user.userId;
-    const { productId, quantity } = await req.json();
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "No token" });
 
-    const user = await User.findById(userId);
-    if (!user.cart) user.cart = [];
-
-    const cartItem = user.cart.find((item) => item.product.toString() === productId);
-    if (cartItem) {
-      cartItem.quantity += quantity || 1;
-    } else {
-      user.cart.push({ product: productId, quantity: quantity || 1 });
-    }
-
-    await user.save();
-    return new Response(JSON.stringify({ message: "Item added to cart", cart: user.cart }), { status: 200 });
-  } catch (error) {
-    return new Response(JSON.stringify({ message: "Error adding to cart", error: error.message }), { status: 500 });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.userId;
+  } catch {
+    return res.status(401).json({ message: "Invalid token" });
   }
-}
 
-// ---------------- Update quantity ----------------
-export async function PUT(req) {
-  await runMiddleware(req, null, cors);
-  await connectDB();
-  await authMiddleware(req, null);
+  const user = await User.findById(req.userId).populate("cart.product");
+  if (!user) return res.status(404).json({ message: "User not found" });
 
-  try {
-    const { productId, quantity } = await req.json();
-    const userId = req.user.userId;
+  const body = req.body;
 
-    if (!productId || quantity < 1) 
-      return new Response(JSON.stringify({ message: "Invalid productId or quantity" }), { status: 404 });
+  switch (action) {
 
-    const user = await User.findById(userId);
-    if (!user) return new Response(JSON.stringify({ message: "User not found" }), { status: 404 });
+    case "list":
+      return res.status(200).json({ cart: user.cart });
 
-    const cartItem = user.cart.find((item) => item.product.toString() === productId);
-    if (!cartItem) return new Response(JSON.stringify({ message: "Product not found in cart" }), { status: 404 });
+    case "add":
+      {
+        const { productId, quantity } = body;
+        const existing = user.cart.find(i => i.product.toString() === productId);
 
-    cartItem.quantity = quantity;
-    await user.save();
+        if (existing) existing.quantity += quantity || 1;
+        else user.cart.push({ product: productId, quantity: quantity || 1 });
 
-    return new Response(JSON.stringify({ message: "Cart updated", cart: user.cart }), { status: 200 });
-  } catch (error) {
-    return new Response(JSON.stringify({ message: "Error updating cart", error: error.message }), { status: 500 });
-  }
-}
+        await user.save();
+        return res.status(200).json({ message: "Added", cart: user.cart });
+      }
 
-// ---------------- Get cart ----------------
-export async function GET(req) {
-  await runMiddleware(req, null, cors);
-  await connectDB();
-  await authMiddleware(req, null);
+    case "update":
+      {
+        const { productId, quantity } = body;
+        const item = user.cart.find(i => i.product.toString() === productId);
 
-  try {
-    const userId = req.user.userId;
-    const user = await User.findById(userId).populate("cart.product");
-    if (!user) return new Response(JSON.stringify({ message: "User not found" }), { status: 404 });
+        if (!item) return res.status(404).json({ message: "Not found in cart" });
 
-    return new Response(JSON.stringify({ cart: user.cart }), { status: 200 });
-  } catch (error) {
-    return new Response(JSON.stringify({ message: "Error getting cart", error: error.message }), { status: 500 });
-  }
-}
+        item.quantity = quantity;
+        await user.save();
+        return res.status(200).json({ message: "Updated", cart: user.cart });
+      }
 
-// ---------------- Remove item ----------------
-export async function DELETE(req, { params }) {
-  await runMiddleware(req, null, cors);
-  await connectDB();
-  await authMiddleware(req, null);
+    case "remove":
+      {
+        const { productId } = body;
+        user.cart = user.cart.filter(i => i.product.toString() !== productId);
+        await user.save();
+        return res.status(200).json({ message: "Removed", cart: user.cart });
+      }
 
-  try {
-    const userId = req.user.userId;
-    const { productId } = params;
+    case "clear":
+      {
+        user.cart = [];
+        await user.save();
+        return res.status(200).json({ message: "Cleared", cart: user.cart });
+      }
 
-    const user = await User.findById(userId);
-    if (!user) return new Response(JSON.stringify({ message: "User not found" }), { status: 404 });
-
-    user.cart = user.cart.filter((item) => item.product.toString() !== productId);
-    await user.save();
-
-    return new Response(JSON.stringify({ message: "Product removed from cart", cart: user.cart }), { status: 200 });
-  } catch (error) {
-    return new Response(JSON.stringify({ message: "Error removing from cart", error: error.message }), { status: 500 });
-  }
-}
-
-// ---------------- Clear cart ----------------
-export async function CLEAR(req) {
-  await runMiddleware(req, null, cors);
-  await connectDB();
-  await authMiddleware(req, null);
-
-  try {
-    const userId = req.user.userId;
-    const user = await User.findById(userId);
-    if (!user) return new Response(JSON.stringify({ message: "User not found" }), { status: 404 });
-
-    user.cart = [];
-    await user.save();
-
-    return new Response(JSON.stringify({ message: "Cart cleared", cart: user.cart }), { status: 200 });
-    } catch (error) {
-    return new Response(JSON.stringify({ message: "Error clearing cart", error: error.message }), { status: 500 });
+    default:
+      return res.status(400).json({ message: "Invalid action" });
   }
 }
