@@ -1,7 +1,3 @@
-export const config = {
-  runtime: "edge",
-};
-
 import connectDB from "../../lib/mongodb.js";
 import User from "../../modules/User.js";
 import jwt from "jsonwebtoken";

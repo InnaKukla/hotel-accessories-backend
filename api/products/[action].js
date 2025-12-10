@@ -1,7 +1,3 @@
-export const config = {
-  runtime: "edge",
-};
-
 import connectDB from "../../lib/mongodb";
 import Product from "../../modules/Product";
 import multer from "multer";

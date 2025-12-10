@@ -1,7 +1,3 @@
-export const config = {
-  runtime: "edge",
-};
-
 import connectDB from "../../../lib/mongodb.js";
 import corsMiddleware from "../../../middleware/cors.js";
 import authMiddleware from "../../../middleware/auth.js";

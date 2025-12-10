@@ -1,7 +1,3 @@
-export const config = {
-  runtime: "edge",
-};
-
 import bcrypt from "bcryptjs";
 import connectDB from "../../../lib/mongodb.js";
 import corsMiddleware from "../../../middleware/cors.js";
