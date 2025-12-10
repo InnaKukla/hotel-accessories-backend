@@ -1,8 +1,8 @@
 import connectDB from "../../lib/mongodb";
 import authMiddleware from "../../middleware/auth";
 import { runMiddleware, cors } from "../../middleware/cors";
-import Order from "../../../modules/Order";
-import Contact from "../../../modules/Contact";
+import Order from "../../modules/Order";
+import Contact from "../../modules/Contact";
 
 export default async function handler(req, res) {
   await runMiddleware(req, res, cors);
