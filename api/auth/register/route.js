@@ -6,7 +6,9 @@ import{ runMiddleware, cors } from "../../../middleware/cors.js";
 
 export default async function handler(req, res) {
    await runMiddleware(req, res, cors);
-
+// обробка preflight
+  if (req.method === "OPTIONS") return res.status(204).end();
+  
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
   }

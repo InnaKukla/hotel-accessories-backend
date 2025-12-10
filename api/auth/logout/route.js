@@ -1,4 +1,4 @@
-import { runMiddleware, cors } from "@/middleware/cors.js";
+import { runMiddleware, cors } from "../../middleware/cors.js";
 import connectDB from "../../lib/mongodb.js";
 import authMiddleware from "../../middleware/auth.js";
 import User from "../../modules/User.js";
