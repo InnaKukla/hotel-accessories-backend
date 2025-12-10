@@ -1,6 +1,6 @@
-import connectDB from "../../../lib/mongodb";
+import connectDB from "../../lib/mongodb";
 import authMiddleware from "../../../middleware/auth";
-import { runMiddleware, cors } from "../../../middleware/cors";
+import { runMiddleware, cors } from "../../middleware/cors";
 import Order from "../../../modules/Order";
 import Contact from "../../../modules/Contact";
 
@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   await connectDB();
 
   const { method } = req;
-  const { action } = req.query.action;
+  const action  = req.query.action;
 
   try {
     // CONTACT FORM: POST /api/form?action=contact

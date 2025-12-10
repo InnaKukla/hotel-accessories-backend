@@ -119,7 +119,7 @@ export default async function handler(req, res) {
         if (req.method !== "GET") return res.status(405).json({ message: "Method not allowed" });
 
         {
-          const { category, page = 1, limit = 8 } = req.query;
+          const {category, page = 1, limit = 8 } = req.query;
           const pageNum = parseInt(page);
           const limitNum = parseInt(limit);
 
