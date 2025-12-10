@@ -1,3 +1,7 @@
+export const config = {
+  runtime: "edge",
+};
+
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import connectDB from "../../lib/mongodb.js";
