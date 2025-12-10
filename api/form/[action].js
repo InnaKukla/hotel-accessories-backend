@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   await connectDB();
 
   const { method } = req;
-  const { action } = req.query;
+  const { action } = req.query.action;
 
   try {
     // CONTACT FORM: POST /api/form?action=contact

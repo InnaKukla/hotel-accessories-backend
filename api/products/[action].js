@@ -23,7 +23,7 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-export default async function handler(req) {
+export default async function handler(req, res) {
  await runMiddleware(req, res, cors);
   await connectDB();
 
