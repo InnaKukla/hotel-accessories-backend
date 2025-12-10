@@ -1,5 +1,5 @@
 import connectDB from "../../lib/mongodb";
-import authMiddleware from "../../../middleware/auth";
+import authMiddleware from "../../middleware/auth";
 import { runMiddleware, cors } from "../../middleware/cors";
 import Order from "../../../modules/Order";
 import Contact from "../../../modules/Contact";
