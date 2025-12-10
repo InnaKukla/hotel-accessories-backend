@@ -24,49 +24,53 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 export default async function handler(req, res) {
- await runMiddleware(req, res, cors);
+  await runMiddleware(req, res, cors);
   await connectDB();
 
-  const { searchParams } = new URL(req.url);
-  const action = searchParams.get("action");
+  const { action } = req.query;
 
   try {
     switch (action) {
       // ---------------- Add product ----------------
       case "add":
-        if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+        if (req.method !== "POST") return res.status(405).json({ message: "Method not allowed" });
 
-        // для Cloudinary multer
         await new Promise((resolve, reject) => {
-          upload.single("image")(req, {}, (err) => (err ? reject(err) : resolve()));
+          upload.single("image")(req, res, (err) => (err ? reject(err) : resolve()));
         });
 
         {
-          const { code, name, description, price, size, color, category } = await req.json();
+          const { code, name, description, price, size, color, category } = req.body;
           const imageUrl = req.file ? req.file.path : "";
 
           const product = new Product({
-            code, name, description, price, size, color, category, image: imageUrl,
+            code,
+            name,
+            description,
+            price,
+            size,
+            color,
+            category,
+            image: imageUrl,
           });
 
           await product.save();
-          return new Response(JSON.stringify(product), { status: 201 });
+          return res.status(201).json(product);
         }
 
       // ---------------- Update product ----------------
       case "update":
-        if (req.method !== "PATCH") return new Response("Method not allowed", { status: 405 });
+        if (req.method !== "PATCH") return res.status(405).json({ message: "Method not allowed" });
 
         await new Promise((resolve, reject) => {
-          upload.single("image")(req, {}, (err) => (err ? reject(err) : resolve()));
+          upload.single("image")(req, res, (err) => (err ? reject(err) : resolve()));
         });
 
         {
-          const { id, ...updates } = await req.json();
+          const { id, ...updates } = req.body;
           const product = await Product.findById(id);
-          if (!product) return new Response(JSON.stringify({ message: "Product not found" }), { status: 404 });
+          if (!product) return res.status(404).json({ message: "Product not found" });
 
-          // оновлення зображення
           let imageUrl = product.image;
           if (req.file) {
             if (imageUrl) {
@@ -78,16 +82,17 @@ export default async function handler(req, res) {
 
           Object.assign(product, updates, { image: imageUrl });
           await product.save();
-          return new Response(JSON.stringify(product), { status: 200 });
+          return res.status(200).json(product);
         }
 
       // ---------------- Delete product ----------------
       case "delete":
-        if (req.method !== "DELETE") return new Response("Method not allowed", { status: 405 });
+        if (req.method !== "DELETE") return res.status(405).json({ message: "Method not allowed" });
+
         {
-          const { id } = Object.fromEntries(new URL(req.url).searchParams);
+          const { id } = req.query;
           const product = await Product.findById(id);
-          if (!product) return new Response(JSON.stringify({ message: "Product not found" }), { status: 404 });
+          if (!product) return res.status(404).json({ message: "Product not found" });
 
           if (product.image) {
             const publicId = product.image.split("/").pop().split(".")[0];
@@ -95,30 +100,31 @@ export default async function handler(req, res) {
           }
 
           await Product.findByIdAndDelete(id);
-          return new Response(JSON.stringify({ message: "Product and image deleted" }), { status: 200 });
+          return res.status(200).json({ message: "Product and image deleted" });
         }
 
       // ---------------- Get single product ----------------
       case "one":
-        if (req.method !== "GET") return new Response("Method not allowed", { status: 405 });
-        {
-          const { id } = Object.fromEntries(new URL(req.url).searchParams);
-          const product = await Product.findById(id);
-          if (!product) return new Response(JSON.stringify({ message: "Product not found" }), { status: 404 });
+        if (req.method !== "GET") return res.status(405).json({ message: "Method not allowed" });
 
-          return new Response(JSON.stringify(product), { status: 200 });
+        {
+          const { id } = req.query;
+          const product = await Product.findById(id);
+          if (!product) return res.status(404).json({ message: "Product not found" });
+          return res.status(200).json(product);
         }
 
-      // ---------------- Get products by category ----------------
+     // ---------------- Get products by category ----------------
       case "category":
-        if (req.method !== "GET") return new Response("Method not allowed", { status: 405 });
+        if (req.method !== "GET") return res.status(405).json({ message: "Method not allowed" });
+
         {
-          const { category, page = 1, limit = 8 } = Object.fromEntries(new URL(req.url).searchParams);
+          const { category, page = 1, limit = 8 } = req.query;
           const pageNum = parseInt(page);
           const limitNum = parseInt(limit);
 
           if (!["bedding", "towels", "household-linens"].includes(category)) {
-            return new Response(JSON.stringify({ message: "Invalid category" }), { status: 400 });
+            return res.status(400).json({ message: "Invalid category" });
           }
 
           const totalProducts = await Product.countDocuments({ category });
@@ -126,20 +132,21 @@ export default async function handler(req, res) {
             .skip((pageNum - 1) * limitNum)
             .limit(limitNum);
 
-          return new Response(JSON.stringify({
+          return res.status(200).json({
             totalProducts,
             totalPages: Math.ceil(totalProducts / limitNum),
             currentPage: pageNum,
             products,
-          }), { status: 200 });
+          });
         }
 
       // ---------------- Get all products ----------------
       case "list":
       default:
-        if (req.method !== "GET") return new Response("Method not allowed", { status: 405 });
+        if (req.method !== "GET") return res.status(405).json({ message: "Method not allowed" });
+
         {
-          const { page = 1, limit = 8 } = Object.fromEntries(new URL(req.url).searchParams);
+          const { page = 1, limit = 8 } = req.query;
           const pageNum = parseInt(page);
           const limitNum = parseInt(limit);
 
@@ -148,15 +155,15 @@ export default async function handler(req, res) {
             .skip((pageNum - 1) * limitNum)
             .limit(limitNum);
 
-          return new Response(JSON.stringify({
+          return res.status(200).json({
             totalProducts,
             totalPages: Math.ceil(totalProducts / limitNum),
             currentPage: pageNum,
             products,
-          }), { status: 200 });
+          });
         }
     }
   } catch (error) {
-    return new Response(JSON.stringify({ message: "Error handling products", error: error.message }), { status: 500 });
+    return res.status(500).json({ message: "Error handling products", error: error.message });
   }
 }
