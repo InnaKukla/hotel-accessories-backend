@@ -1,30 +1,18 @@
 import connectDB from "../../lib/mongodb";
-import jwt from "jsonwebtoken";
 import Favorite from "../../modules/Favorite";
+import { runMiddleware, cors } from "../../middleware/cors.js";
+import authMiddleware from "../../middleware/auth";
 
-export default async function handler(req, res) {
+export default authMiddleware (async function handler(req, res) {
   await connectDB();
+  
+// CORS
+ await runMiddleware(req, res, cors);
 
+  const userId = user.userId;
   const { action } = req.query;
-
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-  if (req.method === "OPTIONS") return res.status(200).end();
-
-  // AUTH
-  let userId;
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    userId = decoded.userId;
-  } catch {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  switch (action) {
+    switch (action) {
     // ---------------- GET (check one or get all)
     case "get": {
       const productId = req.query.productId;
@@ -80,4 +68,9 @@ export default async function handler(req, res) {
     default:
       return res.status(400).json({ message: "Invalid action" });
   }
-}
+  } catch (error) {
+    return new Response(JSON.stringify({ message: "Server error", error: error.message }), { status: 500 });
+  }
+
+  
+})

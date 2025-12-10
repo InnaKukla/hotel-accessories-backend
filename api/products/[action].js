@@ -24,7 +24,7 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 export default async function handler(req) {
-  await runMiddleware(req, null, cors);
+ await runMiddleware(req, res, cors);
   await connectDB();
 
   const { searchParams } = new URL(req.url);
@@ -135,7 +135,7 @@ export default async function handler(req) {
         }
 
       // ---------------- Get all products ----------------
-      case "all":
+      case "list":
       default:
         if (req.method !== "GET") return new Response("Method not allowed", { status: 405 });
         {

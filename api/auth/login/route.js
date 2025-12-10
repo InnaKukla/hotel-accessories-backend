@@ -2,8 +2,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import connectDB from "../../lib/mongodb.js";
 import User from "../../modules/User.js";
+import { runMiddleware, cors } from "@/middleware/cors.js";
 
 export default async function handler(req, res) {
+   await runMiddleware(req, res, cors);
   // Only POST allowed
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
