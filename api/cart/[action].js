@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   // Preflight
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  const auth = await authMiddleware(res, req);
+  const auth = await authMiddleware(req, res);
   if (!auth) return;
 
   await connectDB();
@@ -45,7 +45,7 @@ export default async function handler(req, res) {
 
         item.quantity = quantity;
         await dbUser.save();
-        return res.status(200).json({ message: "Updated", cart: user.cart });
+        return res.status(200).json({ message: "Updated", cart: dbUser.cart });
       }
 
       case "remove": {
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
           (i) => i.product.toString() !== productId
         );
         await dbUser.save();
-        return res.status(200).json({ message: "Removed", cart: db.cart });
+        return res.status(200).json({ message: "Removed", cart: dbUser.cart });
       }
 
       case "clear": {
