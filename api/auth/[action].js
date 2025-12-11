@@ -1,9 +1,9 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import connectDB from "../../../lib/mongodb.js";
-import User from "../../../modules/User.js";
-import authMiddleware from "../../../middleware/auth.js";
-import { runMiddleware, cors } from "../../../middleware/cors.js";
+import connectDB from "../../lib/mongodb";
+import User from "../../modules/User";
+import authMiddleware from "../../middleware/auth";
+import { runMiddleware, cors } from "../../middleware/cors";
 
 export default async function handler(req, res) {
   await runMiddleware(req, res, cors);
