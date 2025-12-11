@@ -7,11 +7,11 @@ export default authMiddleware(async function handler(req, res) {
 
     // CORS
   await runMiddleware(req, res, cors);
-
-
-  await connectDB();
   const auth = await authMiddleware(res, req);
   if (!auth) return;
+
+  await connectDB();
+
 
   const body = await req.json().catch(() => ({}));
   const userId = auth.userId;
@@ -22,7 +22,7 @@ export default authMiddleware(async function handler(req, res) {
 
     switch (action) {
       case "list":
-        return res.status(200).json({ cart: user.cart });
+        return res.status(200).json({ cart: dbUser.cart });
 
       case "add": {
         const { productId, quantity } = body;
