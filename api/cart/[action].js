@@ -4,13 +4,15 @@ import authMiddleware from "../../middleware/auth";
 import { runMiddleware, cors } from "../../middleware/cors";
 
 export default authMiddleware(async function handler(req, res) {
-
-    // CORS
+  // CORS
   await runMiddleware(req, res, cors);
-await connectDB();
+  // Preflight
+  if (req.method === "OPTIONS") return res.status(204).end();
 
- const auth = await authMiddleware(res, req);
+  const auth = await authMiddleware(res, req);
   if (!auth) return;
+
+  await connectDB();
 
   const body = req.body || {};
   const userId = auth.userId;
@@ -38,7 +40,9 @@ await connectDB();
 
       case "update": {
         const { productId, quantity } = body;
-        const item = dbUser.cart.find((i) => i.product.toString() === productId);
+        const item = dbUser.cart.find(
+          (i) => i.product.toString() === productId
+        );
 
         if (!item)
           return res.status(404).json({ message: "Not found in cart" });
@@ -50,7 +54,9 @@ await connectDB();
 
       case "remove": {
         const { productId } = body;
-        dbUser.cart = user.cart.filter((i) => i.product.toString() !== productId);
+        dbUser.cart = user.cart.filter(
+          (i) => i.product.toString() !== productId
+        );
         await dbUser.save();
         return res.status(200).json({ message: "Removed", cart: user.cart });
       }
