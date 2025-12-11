@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   // Preflight
     if (req.method === "OPTIONS") return res.status(204).end();
   
-    const auth = await authMiddleware(res, req);
+    const auth = await authMiddleware(req, res);
     if (!auth) return;
   
   await connectDB();
