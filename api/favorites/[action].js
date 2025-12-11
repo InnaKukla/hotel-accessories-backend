@@ -15,9 +15,9 @@ import authMiddleware from "../../middleware/auth";
   if (!req._user || !req._user.userId) {
       return res.status(401).json({message: "Unauthorized"})
     };
-    const userId = req._user.userId;
+    
   await connectDB();
-  
+  const userId = req._user.userId;
 
   const { action } = req.query;
   try {
