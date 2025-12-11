@@ -3,7 +3,7 @@ import Favorite from "../../modules/Favorite";
 import { runMiddleware, cors } from "../../middleware/cors";
 import authMiddleware from "../../middleware/auth";
 
-export default async function handler(req, res) {
+ async function handler(req, res) {
 
   // CORS
   await runMiddleware(req, res, cors);
@@ -11,11 +11,11 @@ export default async function handler(req, res) {
   // Preflight
     if (req.method === "OPTIONS") return res.status(204).end();
   
-    await authMiddleware(req, res);
-  if (!req._user) {
+    // await authMiddleware(req, res);
+  if (!req._user || !req._user.userId) {
       return res.status(401).json({message: "Unauthorized"})
     };
-    const userId = req._user.id;
+    const userId = req._user.userId;
   await connectDB();
   
 
@@ -96,4 +96,5 @@ export default async function handler(req, res) {
   }
 
   
-}
+ }
+export default authMiddleware(handler);
