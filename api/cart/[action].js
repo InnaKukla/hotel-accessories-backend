@@ -3,7 +3,7 @@ import User from "../../modules/User";
 import authMiddleware from "../../middleware/auth";
 import { runMiddleware, cors } from "../../middleware/cors";
 
-export default authMiddleware(async function handler(req, res) {
+export default async function handler(req, res) {
   // CORS
   await runMiddleware(req, res, cors);
   // Preflight
@@ -73,4 +73,4 @@ export default authMiddleware(async function handler(req, res) {
   } catch {
     return res.status(401).json({ message: "Invalid token" });
   }
-});
+};

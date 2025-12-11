@@ -3,7 +3,7 @@ import Favorite from "../../modules/Favorite";
 import { runMiddleware, cors } from "../../middleware/cors";
 import authMiddleware from "../../middleware/auth";
 
-export default authMiddleware(async function handler(req, res) {
+export default async function handler(req, res) {
 
   // CORS
   await runMiddleware(req, res, cors);
@@ -93,4 +93,4 @@ export default authMiddleware(async function handler(req, res) {
   }
 
   
-})
+}
