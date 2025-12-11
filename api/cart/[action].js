@@ -8,11 +8,13 @@ export default authMiddleware(async function handler(req, res) {
     // CORS
   await runMiddleware(req, res, cors);
 
+
   await connectDB();
-console.log(req);
+  const auth = await authMiddleware(res, req);
+  if (!auth) return;
 
   const body = await req.json().catch(() => ({}));
-  const userId = req.user.userId;
+  const userId = auth.userId;
   const { action } = req.query; // <- ключова магія
   try {
     const dbUser = await User.findById(userId).populate("cart.product");
@@ -24,39 +26,39 @@ console.log(req);
 
       case "add": {
         const { productId, quantity } = body;
-        const existing = user.cart.find(
+        const existing = dbUser.cart.find(
           (i) => i.product.toString() === productId
         );
 
         if (existing) existing.quantity += quantity || 1;
-        else user.cart.push({ product: productId, quantity: quantity || 1 });
+        else dbUser.cart.push({ product: productId, quantity: quantity || 1 });
 
-        await user.save();
+        await dbUser.save();
         return res.status(200).json({ message: "Added", cart: user.cart });
       }
 
       case "update": {
         const { productId, quantity } = body;
-        const item = user.cart.find((i) => i.product.toString() === productId);
+        const item = dbUser.cart.find((i) => i.product.toString() === productId);
 
         if (!item)
           return res.status(404).json({ message: "Not found in cart" });
 
         item.quantity = quantity;
-        await user.save();
+        await dbUser.save();
         return res.status(200).json({ message: "Updated", cart: user.cart });
       }
 
       case "remove": {
         const { productId } = body;
-        user.cart = user.cart.filter((i) => i.product.toString() !== productId);
-        await user.save();
+        dbUser.cart = user.cart.filter((i) => i.product.toString() !== productId);
+        await dbUser.save();
         return res.status(200).json({ message: "Removed", cart: user.cart });
       }
 
       case "clear": {
-        user.cart = [];
-        await user.save();
+        dbUser.cart = [];
+        await dbUser.save();
         return res.status(200).json({ message: "Cleared", cart: user.cart });
       }
 
