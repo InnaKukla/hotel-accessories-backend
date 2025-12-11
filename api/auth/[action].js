@@ -147,7 +147,7 @@ export default async function handler(req, res) {
       }
 
       // -------------------------------- GET ONE USER
-      case "get-one": {
+      case "user": {
         if (req.method !== "GET")
           return res.status(405).json({ message: "Method not allowed" });
 
