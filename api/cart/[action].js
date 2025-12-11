@@ -9,13 +9,13 @@ export default async function handler(req, res) {
   // Preflight
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  const auth = await authMiddleware(res, req);
-  if (!auth) return;
+  await authMiddleware(res, req);
+  // if (!auth) return;
 
   await connectDB();
 
   const body = req.body || {};
-  const userId = auth.userId;
+  const userId = req.user.userId;
   const { action } = req.query; // <- ключова магія
   try {
     const dbUser = await User.findById(userId).populate("cart.product");
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
           (i) => i.product.toString() !== productId
         );
         await dbUser.save();
-        return res.status(200).json({ message: "Removed", cart: dbUser.cart });
+        return res.status(200).json({ message: "Removed", cart: db.cart });
       }
 
       case "clear": {
