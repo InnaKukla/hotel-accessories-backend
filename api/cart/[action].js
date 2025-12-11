@@ -27,22 +27,18 @@ export default async function handler(req, res) {
 
       case "add": {
         const { productId, quantity } = body;
-        const existing = dbUser.cart.find(
-          (i) => i.product.toString() === productId
-        );
+        const existing = dbUser.cart.find((i) => i.product.toString() === productId);
 
         if (existing) existing.quantity += quantity || 1;
         else dbUser.cart.push({ product: productId, quantity: quantity || 1 });
 
         await dbUser.save();
-        return res.status(200).json({ message: "Added", cart: user.cart });
+        return res.status(200).json({ message: "Added", cart: dbUser.cart });
       }
 
       case "update": {
         const { productId, quantity } = body;
-        const item = dbUser.cart.find(
-          (i) => i.product.toString() === productId
-        );
+        const item = dbUser.cart.find((i) => i.product.toString() === productId);
 
         if (!item)
           return res.status(404).json({ message: "Not found in cart" });
@@ -54,17 +50,17 @@ export default async function handler(req, res) {
 
       case "remove": {
         const { productId } = body;
-        dbUser.cart = user.cart.filter(
+        dbUser.cart = dbUser.cart.filter(
           (i) => i.product.toString() !== productId
         );
         await dbUser.save();
-        return res.status(200).json({ message: "Removed", cart: user.cart });
+        return res.status(200).json({ message: "Removed", cart: dbUser.cart });
       }
 
       case "clear": {
         dbUser.cart = [];
         await dbUser.save();
-        return res.status(200).json({ message: "Cleared", cart: user.cart });
+        return res.status(200).json({ message: "Cleared", cart: dbUser.cart });
       }
 
       default:
