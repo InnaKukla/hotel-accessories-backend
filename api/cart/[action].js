@@ -8,8 +8,8 @@ export default authMiddleware(async function handler(req, res) {
     // CORS
   await runMiddleware(req, res, cors);
 
-
   await connectDB();
+console.log(req);
 
   const body = await req.json().catch(() => ({}));
   const userId = req.user.userId;
