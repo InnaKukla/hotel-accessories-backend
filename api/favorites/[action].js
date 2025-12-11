@@ -7,10 +7,15 @@ export default authMiddleware(async function handler(req, res) {
 
   // CORS
   await runMiddleware(req, res, cors);
+  // Preflight
+    if (req.method === "OPTIONS") return res.status(204).end();
+  
+    const auth = await authMiddleware(res, req);
+    if (!auth) return;
   
   await connectDB();
   
-  const userId = user.userId;
+  const userId = auth.userId;
   const { action } = req.query;
   try {
     switch (action) {
