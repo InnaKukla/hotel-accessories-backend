@@ -12,7 +12,7 @@ export default authMiddleware(async function handler(req, res) {
   await connectDB();
 
   const body = await req.json().catch(() => ({}));
-  const userId = user.userId;
+  const userId = req.user.userId;
   const { action } = req.query; // <- ключова магія
   try {
     const dbUser = await User.findById(userId).populate("cart.product");
