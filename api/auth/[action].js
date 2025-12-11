@@ -143,7 +143,8 @@ export default async function handler(req, res) {
         if (phone) user.phone = phone;
         if (password) user.password = await bcrypt.hash(password, 10);
 
-        await user.save();return res.status(200).json({ message: "User updated", user });
+            await user.save();
+            return res.status(200).json({ message: "User updated", user });
       }
 
       // -------------------------------- GET ONE USER
