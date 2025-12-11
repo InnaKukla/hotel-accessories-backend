@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   await connectDB();
 
   const { method } = req;
-  const action  = req.query.action;
+  const action = req.query.action;
 
   try {
     // CONTACT FORM: POST /api/form?action=contact
@@ -38,14 +38,16 @@ export default async function handler(req, res) {
 
     // ORDER LIST: GET /api/form?action=orders
     if (method === "GET" && action === "orders") {
-      await authMiddleware(req, res);
+      const auth = await authMiddleware(res, req);
+      if (!auth) return;
 
-      const orders = await Order.find({ user: req.user.userId });
+      const userId = auth.userId;
+
+      const orders = await Order.find({ user: userId });
       return res.status(200).json({ total: orders.length, orders });
     }
 
     return res.status(400).json({ message: "Invalid action" });
-
   } catch (e) {
     return res.status(500).json({ message: "Error", error: e.message });
   }
