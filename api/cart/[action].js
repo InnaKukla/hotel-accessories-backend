@@ -9,10 +9,6 @@ export default authMiddleware(async function handler(req, res) {
   // CORS
   await runMiddleware(req, res, cors);
 
-  // AUTH
-  const user = await authMiddleware(req);
-  if (user instanceof Response) return user;
-
   const body = await req.json().catch(() => ({}));
   const userId = user.userId;
   const { action } = req.query; // <- ключова магія
