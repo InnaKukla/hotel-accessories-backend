@@ -1,6 +1,6 @@
 import connectDB from "../../lib/mongodb";
 import Favorite from "../../modules/Favorite";
-import { runMiddleware, cors } from "../../middleware/cors.js";
+import { runMiddleware, cors } from "../../middleware/cors";
 import authMiddleware from "../../middleware/auth";
 
 export default authMiddleware (async function handler(req, res) {
