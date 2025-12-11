@@ -4,10 +4,12 @@ import authMiddleware from "../../middleware/auth";
 import { runMiddleware, cors } from "../../middleware/cors";
 
 export default authMiddleware(async function handler(req, res) {
-  await connectDB();
 
-  // CORS
+    // CORS
   await runMiddleware(req, res, cors);
+
+
+  await connectDB();
 
   const body = await req.json().catch(() => ({}));
   const userId = user.userId;

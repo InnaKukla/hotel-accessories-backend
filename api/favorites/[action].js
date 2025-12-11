@@ -3,11 +3,15 @@ import Favorite from "../../modules/Favorite";
 import { runMiddleware, cors } from "../../middleware/cors";
 import authMiddleware from "../../middleware/auth";
 
-export default authMiddleware (async function handler(req, res) {
+export default authMiddleware(async function handler(req, res) {
+
+  // CORS
+  await runMiddleware(req, res, cors);
+  
   await connectDB();
   
-// CORS
- await runMiddleware(req, res, cors);
+
+
 
   const userId = user.userId;
   const { action } = req.query;
