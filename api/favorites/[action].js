@@ -13,21 +13,35 @@ export default authMiddleware (async function handler(req, res) {
   const { action } = req.query;
   try {
     switch (action) {
-    // ---------------- GET (check one or get all)
-    case "get": {
+   // ---------------- GET ONE FAVORITE
+    // GET /api/favorites?action=get-one&productId=xxx
+    case "one": {
       const productId = req.query.productId;
-      if (productId) {
-        const favorite = await Favorite.findOne({ userId, productId }).populate("productId");
-        if (!favorite) return res.status(200).json({ isFavorite: false, product: null });
+      if (!productId) {
+        return res.status(400).json({ message: "productId is required" });
+      }
 
-        return res.status(200).json({ isFavorite: true, product: favorite.productId });
-      } else {
+      const favorite = await Favorite.findOne({ userId, productId }).populate("productId");
+
+      if (!favorite) {
+        return res.status(200).json({ isFavorite: false, product: null });
+      }
+
+      return res.status(200).json({
+        isFavorite: true,
+        product: favorite.productId,
+      });
+    }
+
+    // ---------------- GET ALL FAVORITES
+    // GET /api/favorites?action=get-all
+      case "list": {
         const favorites = await Favorite.find({ userId }).populate("productId");
+
         return res.status(200).json(
           favorites.map(fav => fav.productId)
         );
       }
-    }
 
     // ---------------- ADD favorite
     case "add": {
