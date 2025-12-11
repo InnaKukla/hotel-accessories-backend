@@ -25,7 +25,7 @@ export default async function handler(req, res) {
    // ---------------- GET ONE FAVORITE
     // GET /api/favorites?action=get-one&productId=xxx
     case "one": {
-      const productId = req.query.productId;
+      const productId = req.query.id;
       if (!productId) {
         return res.status(400).json({ message: "productId is required" });
       }
