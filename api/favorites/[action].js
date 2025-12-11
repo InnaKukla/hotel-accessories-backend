@@ -10,9 +10,6 @@ export default authMiddleware(async function handler(req, res) {
   
   await connectDB();
   
-
-
-
   const userId = user.userId;
   const { action } = req.query;
   try {

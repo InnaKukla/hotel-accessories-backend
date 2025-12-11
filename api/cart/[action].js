@@ -7,13 +7,12 @@ export default authMiddleware(async function handler(req, res) {
 
     // CORS
   await runMiddleware(req, res, cors);
-  const auth = await authMiddleware(res, req);
+await connectDB();
+
+ const auth = await authMiddleware(res, req);
   if (!auth) return;
 
-  await connectDB();
-
-
-  const body = await req.json().catch(() => ({}));
+  const body = req.body || {};
   const userId = auth.userId;
   const { action } = req.query; // <- ключова магія
   try {
