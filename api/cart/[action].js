@@ -9,13 +9,13 @@ export default async function handler(req, res) {
   // Preflight
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  await authMiddleware(res, req);
-  // if (!auth) return;
+  const auth = await authMiddleware(res, req);
+  if (!auth) return;
 
   await connectDB();
 
   const body = req.body || {};
-  const userId = req.user.userId;
+  const userId = auth.userId;
   const { action } = req.query; // <- ключова магія
   try {
     const dbUser = await User.findById(userId).populate("cart.product");
