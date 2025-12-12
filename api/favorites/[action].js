@@ -11,10 +11,10 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
 
   const auth = await authMiddleware(req, res, { skipHandler: true });
-  if (!auth || !req._user?.userId) {
+  if (!auth ) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  const userId = req._user.userId;
+  const userId = auth.userId;
   await connectDB();
 
   const { action } = req.query;
