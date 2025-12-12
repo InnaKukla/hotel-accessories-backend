@@ -1,5 +1,6 @@
 import connectDB from "../../lib/mongodb";
 import Favorite from "../../modules/Favorite";
+import Product from "../../modules/Product";
 import { runMiddleware, cors } from "../../middleware/cors";
 import authMiddleware from "../../middleware/auth";
 
