@@ -44,7 +44,7 @@ export default async function handler(req, res) {
       case "update": {
         const { productId, quantity } = body;
         const item = dbUser.cart.find(
-          (i) => i.product.toString() === productId
+          (i) => i.product._id.toString() === productId
         );
 
         if (!item)
@@ -57,11 +57,19 @@ export default async function handler(req, res) {
 
       case "remove": {
         const { productId } = body;
-        dbUser.cart = dbUser.cart.filter(
-          (i) => i.product.toString() !== productId
-        );
-        await dbUser.save();
-        return res.status(200).json({ message: "Removed", cart: dbUser.cart });
+
+        const deleteProduct = await User.findByIdAndUpdate(
+          userId,
+          { $pull: { cart: { product: productId } } }, // $pull видаляє об’єкт з масиву за умовою
+          { new: true } // повертає оновлений документ
+        ).populate("cart.product");
+
+        if (!deleteProduct) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        return res
+          .status(200)
+          .json({ message: "Removed", cart: deleteProduct.cart });
       }
 
       case "clear": {
