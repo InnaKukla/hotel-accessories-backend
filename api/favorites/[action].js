@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   const user = await authMiddleware(req, res);
   if (!user) return;
 
-  const userId = user.userId;
+  const userId = req._user.userId;
   await connectDB();
 
   const { action } = req.query;
@@ -89,9 +89,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: "Invalid action" });
     }
   } catch (error) {
-    return new Response(
-      JSON.stringify({ message: "Server error", error: error.message }),
-      { status: 500 }
-    );
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 }
