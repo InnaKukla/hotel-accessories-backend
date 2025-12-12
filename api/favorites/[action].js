@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(204).end();
 
   const auth = await authMiddleware(req, res, { skipHandler: true });
-  if (!auth ) {
+  if (!auth) {
     return res.status(401).json({ message: "Unauthorized" });
   }
   const userId = auth.userId;
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       // ---------------- ADD favorite
       case "add": {
         const { productId } = req.body;
-
+        const userId = req._user.userId;
         if (!productId) {
           return res.status(400).json({ message: "productId is required" });
         }
