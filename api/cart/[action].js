@@ -61,27 +61,32 @@ export default async function handler(req, res) {
         if (!productId) {
           return res.status(400).json({ message: "productId is required" });
         }
+        const updatedUser = await User.findByIdAndUpdate(
+          userId,
+          { $pull: { cart: { product: productId } } }, // $pull видаляє об’єкт з масиву за умовою
+          { new: true } // повертає оновлений документ
+        ).populate("cart.product");
 
-        const removed = await User.findOneAndDelete({ userId, productId });
-
-        if (!removed) {
-          return res.status(404).json({ message: "Not found" });
+        if (!updatedUser) {
+          return res.status(404).json({ message: "User not found" });
         }
 
-        return res.status(200).json({ message: "Removed" });
+        return res
+          .status(200)
+          .json({ message: "Removed", cart: updatedUser.cart });
+      }
       //   const user = await User.findById(userId);
-  
+
       // if (!removed) return res.status(404).json({ message: "User not found" });
-  
+
       // user.cart = user.cart.filter((item) => item.product._id.toString() !== productId)
-  
+
       // await user.save();
-  
+
       // res.status(200).json({ message: "Product remove from cart", cart: user.cart });
       //   return res
       //     .status(200)
       //     .json({ message: "Removed", cart: deleteProduct.cart });
-      }
 
       case "clear": {
         dbUser.cart = [];
