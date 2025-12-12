@@ -38,10 +38,10 @@ export default async function handler(req, res) {
 
     // ORDER LIST: GET /api/form?action=orders
     if (method === "GET" && action === "orders") {
-      const auth = await authMiddleware(res, req);
-      if (!auth) return;
+      const user = await authMiddleware(req, res);
+      if (!user) return;
 
-      const userId = auth.userId;
+      const userId = user.userId;
 
       const orders = await Order.find({ user: userId });
       return res.status(200).json({ total: orders.length, orders });

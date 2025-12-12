@@ -11,12 +11,11 @@ export default async function handler(req, res) {
 
   const user = await authMiddleware(req, res);
   if (!user) return;
-console.log(user, "userId");
 
   await connectDB();
 
   const body = req.body || {};
-  const userId = auth.userId;
+  const userId = user.userId;
   
   const { action } = req.query; // <- ключова магія
   try {

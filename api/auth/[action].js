@@ -17,7 +17,6 @@ export default async function handler(req, res) {
 
   try {
     switch (action) {
-
       // -------------------------------- REGISTER
       case "register": {
         if (req.method !== "POST")
@@ -30,7 +29,7 @@ export default async function handler(req, res) {
           phone,
           email,
           password,
-          confirmPassword
+          confirmPassword,
         } = req.body;
 
         const existingUser = await User.findOne({ email });
@@ -48,14 +47,12 @@ export default async function handler(req, res) {
           lastName,
           phone,
           email,
-          password: hashed
+          password: hashed,
         });
 
-        const token = jwt.sign(
-          { userId: user._id },
-          process.env.JWT_SECRET,
-          { expiresIn: "7d" }
-        );
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+          expiresIn: "7d",
+        });
 
         return res.status(201).json({
           message: "User registered",
@@ -66,8 +63,8 @@ export default async function handler(req, res) {
             firstName,
             lastName,
             phone,
-            email
-          }
+            email,
+          },
         });
       }
 
@@ -86,11 +83,9 @@ export default async function handler(req, res) {
         if (!isMatch)
           return res.status(400).json({ message: "Invalid credentials" });
 
-        const token = jwt.sign(
-          { userId: user._id },
-          process.env.JWT_SECRET,
-          { expiresIn: "7d" }
-        );
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+          expiresIn: "7d",
+        });
 
         return res.status(200).json({
           token,
@@ -100,8 +95,8 @@ export default async function handler(req, res) {
             firstName: user.firstName,
             lastName: user.lastName,
             phone: user.phone,
-            email: user.email
-          }
+            email: user.email,
+          },
         });
       }
 
@@ -124,18 +119,12 @@ export default async function handler(req, res) {
           return res.status(405).json({ message: "Method not allowed" });
 
         const data = await authMiddleware(req, res);
-        if (!data) return;
-
+            if (!data) return;
+            
         const user = await User.findById(data.userId);
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        const {
-          companyName,
-          firstName,
-          lastName,
-          phone,
-          password
-        } = req.body;
+        const { companyName, firstName, lastName, phone, password } = req.body;
 
         if (companyName) user.companyName = companyName;
         if (firstName) user.firstName = firstName;
@@ -143,8 +132,8 @@ export default async function handler(req, res) {
         if (phone) user.phone = phone;
         if (password) user.password = await bcrypt.hash(password, 10);
 
-            await user.save();
-            return res.status(200).json({ message: "User updated", user });
+        await user.save();
+        return res.status(200).json({ message: "User updated", user });
       }
 
       // -------------------------------- GET ONE USER
@@ -152,11 +141,12 @@ export default async function handler(req, res) {
         if (req.method !== "GET")
           return res.status(405).json({ message: "Method not allowed" });
 
-        const userId = req.user.userId;
+        const data = await authMiddleware(req, res);
+        if (!data) return;
+        const userId = data.userId;
 
         const user = await User.findById(userId).select("-password");
-        if (!user)
-          return res.status(404).json({ message: "User not found" });
+        if (!user) return res.status(404).json({ message: "User not found" });
 
         return res.status(200).json(user);
       }
@@ -166,6 +156,8 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: "Invalid action" });
     }
   } catch (err) {
-    return res.status(500).json({ message: "Server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 }

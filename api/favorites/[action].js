@@ -10,11 +10,10 @@ export default async function handler(req, res) {
   // Preflight
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  const auth = await authMiddleware(req, res, { skipHandler: true });
-  if (!auth) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-  const userId = auth.userId;
+  const user = await authMiddleware(req, res);
+  if (!user) return;
+
+  const userId = user.userId;
   await connectDB();
 
   const { action } = req.query;
