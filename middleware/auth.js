@@ -1,9 +1,9 @@
 // middleware/auth.js
 import jwt from "jsonwebtoken";
 
-export default function authMiddleware(handler) {
+export default async function authMiddleware(req, res) {
   // wrapper: перевіряє токен і викликає handler(req, res)
-  return async function (req, res) {
+
     try {
       const authHeader = req.headers["authorization"];
       if (!authHeader) {
@@ -22,4 +22,3 @@ export default function authMiddleware(handler) {
       return res.status(401).json({ message: "Unauthorized", error: err.message });
     }
   };
-}
