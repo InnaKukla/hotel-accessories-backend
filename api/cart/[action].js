@@ -58,21 +58,13 @@ export default async function handler(req, res) {
 
       case "remove": {
         const { productId } = body;
+        const removed = await User.findOneAndDelete({ userId });
+        if (!removed) {
+          return res.status(404).json({ message: "Not found" });
+        }
 
-        const user = await User.findById(userId);
-  
-      if (!user) return res.status(404).json({ message: "User not found" });
-  
-      user.cart = user.cart.filter((item) => item.product._id.toString() !== productId)
-  
-      await user.save();
-  
-      res.status(200).json({ message: "Product remove from cart", cart: user.cart });
-        return res
-          .status(200)
-          .json({ message: "Removed", cart: deleteProduct.cart });
+        return res.status(200).json({ message: "Removed" });
       }
-
       case "clear": {
         dbUser.cart = [];
         await dbUser.save();
