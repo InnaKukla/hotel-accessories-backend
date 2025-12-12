@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
   const user = await authMiddleware(req, res);
   if (!user) return;
-console.log(user.userId, "userId");
+console.log(user, "userId");
 
   await connectDB();
 
