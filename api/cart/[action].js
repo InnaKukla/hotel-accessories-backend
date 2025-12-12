@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   await connectDB();
 
   const body = req.body || {};
-  const userId = user.userId;
+ const userId = req._user.userId;
   
   const { action } = req.query; // <- ключова магія
   try {
