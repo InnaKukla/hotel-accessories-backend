@@ -17,7 +17,7 @@ export default function authMiddleware(handler) {
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req._user = decoded; // додаємо дані користувача до req
-      return handler(req, res); // викликаємо оригінальний handler
+      return decoded; // викликаємо оригінальний handler
     } catch (err) {
       return res.status(401).json({ message: "Unauthorized", error: err.message });
     }

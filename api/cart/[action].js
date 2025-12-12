@@ -9,15 +9,14 @@ export default async function handler(req, res) {
   // Preflight
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  const auth = await authMiddleware(req, res);
-  if (!auth) return;
-console.log(auth, "auth");
+  const user = await authMiddleware(req, res);
+  if (!user) return;
+console.log(user.userId, "userId");
 
   await connectDB();
 
   const body = req.body || {};
   const userId = auth.userId;
-  console.log(userId, 'userid');
   
   const { action } = req.query; // <- ключова магія
   try {
