@@ -13,12 +13,11 @@ export default async function handler(req, res) {
   if (!user) return;
 
   const userId = req._user.userId;
-  
+
   await connectDB();
 
   const body = req.body || {};
 
-  
   const { action } = req.query; // <- ключова магія
   try {
     const dbUser = await User.findById(userId).populate("cart.product");
@@ -30,7 +29,9 @@ export default async function handler(req, res) {
 
       case "add": {
         const { productId, quantity } = body;
-        const existing = dbUser.cart.find((i) => i.product.toString() === productId);
+        const existing = dbUser.cart.find(
+          (i) => i.product.toString() === productId
+        );
 
         if (existing) existing.quantity += quantity || 1;
         else dbUser.cart.push({ product: productId, quantity: quantity || 1 });
@@ -41,7 +42,9 @@ export default async function handler(req, res) {
 
       case "update": {
         const { productId, quantity } = body;
-        const item = dbUser.cart.find((i) => i.product.toString() === productId);
+        const item = dbUser.cart.find(
+          (i) => i.product.toString() === productId
+        );
 
         if (!item)
           return res.status(404).json({ message: "Not found in cart" });
@@ -69,7 +72,10 @@ export default async function handler(req, res) {
       default:
         return res.status(400).json({ message: "Invalid action" });
     }
-  } catch {
-    return res.status(401).json({ message: "Invalid token" });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
-};
+}

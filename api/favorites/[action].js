@@ -53,7 +53,6 @@ export default async function handler(req, res) {
       // ---------------- ADD favorite
       case "add": {
         const { productId } = req.body;
-        const userId = req._user.userId;
         if (!productId) {
           return res.status(400).json({ message: "productId is required" });
         }
