@@ -59,15 +59,15 @@ export default async function handler(req, res) {
       case "remove": {
         const { productId } = body;
 
-        const deleteProduct = await User.findByIdAndUpdate(
-          userId,
-          { $pull: { cart: { product: mongoose.Types.ObjectId(productId) } } }, // $pull видаляє об’єкт з масиву за умовою
-          { new: true } // повертає оновлений документ
-        ).populate("cart.product");
-
-        if (!deleteProduct) {
-          return res.status(404).json({ message: "User not found" });
-        }
+        const user = await User.findById(userId);
+  
+      if (!user) return res.status(404).json({ message: "User not found" });
+  
+      user.cart = user.cart.filter((item) => item.product._id.toString() !== productId)
+  
+      await user.save();
+  
+      res.status(200).json({ message: "Product remove from cart", cart: user.cart });
         return res
           .status(200)
           .json({ message: "Removed", cart: deleteProduct.cart });
