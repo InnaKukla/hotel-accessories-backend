@@ -126,7 +126,7 @@ export default async function handler(req, res) {
         const data = await authMiddleware(req, res);
         if (!data) return;
 
-            // const userId = req.user.userId;
+            const userId = req.user.userId;
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: "User not found" });
 
