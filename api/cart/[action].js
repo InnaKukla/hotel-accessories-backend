@@ -11,11 +11,14 @@ export default async function handler(req, res) {
 
   const auth = await authMiddleware(req, res);
   if (!auth) return;
+console.log(auth, "auth");
 
   await connectDB();
 
   const body = req.body || {};
   const userId = auth.userId;
+  console.log(userId, 'userid');
+  
   const { action } = req.query; // <- ключова магія
   try {
     const dbUser = await User.findById(userId).populate("cart.product");
