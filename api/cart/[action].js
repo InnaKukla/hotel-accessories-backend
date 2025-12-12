@@ -3,6 +3,7 @@ import User from "../../modules/User";
 import Product from "../../modules/Product";
 import authMiddleware from "../../middleware/auth";
 import { runMiddleware, cors } from "../../middleware/cors";
+import mongoose from "mongoose";
 
 export default async function handler(req, res) {
   // CORS
@@ -31,7 +32,7 @@ export default async function handler(req, res) {
       case "add": {
         const { productId, quantity } = body;
         const existing = dbUser.cart.find(
-          (i) => i.product.toString() === productId
+          (i) => i.product._id.toString() === productId
         );
 
         if (existing) existing.quantity += quantity || 1;
@@ -60,7 +61,7 @@ export default async function handler(req, res) {
 
         const deleteProduct = await User.findByIdAndUpdate(
           userId,
-          { $pull: { cart: { product: productId } } }, // $pull видаляє об’єкт з масиву за умовою
+          { $pull: { cart: { product: mongoose.Types.ObjectId(productId) } } }, // $pull видаляє об’єкт з масиву за умовою
           { new: true } // повертає оновлений документ
         ).populate("cart.product");
 
