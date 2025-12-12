@@ -126,7 +126,8 @@ export default async function handler(req, res) {
         const data = await authMiddleware(req, res);
         if (!data) return;
 
-        const user = await User.findById(data.userId);
+            // const userId = req.user.userId;
+        const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: "User not found" });
 
         const {
@@ -152,7 +153,7 @@ export default async function handler(req, res) {
         if (req.method !== "GET")
           return res.status(405).json({ message: "Method not allowed" });
 
-        const userId = req.query.id;
+        const userId = req.user.userId;
 
         const user = await User.findById(userId).select("-password");
         if (!user)
