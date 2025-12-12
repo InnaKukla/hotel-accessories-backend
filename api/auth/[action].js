@@ -125,7 +125,7 @@ export default async function handler(req, res) {
 
             await authMiddleware(async (req, res) => {
                 const id = req._user?.userId
-                console.log(userId, "userId");
+                console.log(id, "id");
                 
         });
             
