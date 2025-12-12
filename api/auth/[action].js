@@ -122,13 +122,13 @@ export default async function handler(req, res) {
       case "update": {
         if (req.method !== "PUT")
           return res.status(405).json({ message: "Method not allowed" });
-
+let id
             await authMiddleware(async (req, res) => {
-                const id = req._user?.userId
-                console.log(id, "id");
+                id = req._user?.userId
+               
                 
         });
-            
+            console.log(id, "id"); 
 
         const user = await User.findById(data.userId);
         if (!user) return res.status(404).json({ message: "User not found" });
