@@ -8,13 +8,11 @@ import { runMiddleware, cors } from "../../middleware/cors";
 export default async function handler(req, res) {
   await runMiddleware(req, res, cors);
 
-  const { action } = req.query;
-
   // Preflight
   if (req.method === "OPTIONS") return res.status(204).end();
 
   await connectDB();
-
+  const { action } = req.query;
   try {
     switch (action) {
       // -------------------------------- REGISTER

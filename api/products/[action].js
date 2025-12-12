@@ -25,6 +25,8 @@ const upload = multer({ storage });
 
 export default async function handler(req, res) {
   await runMiddleware(req, res, cors);
+  // Preflight
+  if (req.method === "OPTIONS") return res.status(204).end();
   await connectDB();
 
   const { action } = req.query;
