@@ -125,8 +125,8 @@ export default async function handler(req, res) {
 
         const data = await authMiddleware(req, res);
         if (!data) return;
-            console.log(data);
-            console.log(req);
+            console.log(data, "data");
+            console.log(req.user, "user");
             
 
         const user = await User.findById(data.userId);
